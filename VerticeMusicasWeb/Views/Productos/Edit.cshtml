@@ -1,0 +1,55 @@
+@model VerticeMusicasWeb.Models.Producto
+@{
+    ViewData["Title"] = "Editar producto";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card card-modern">
+            <div class="card-body p-4">
+                <h3 class="mb-3">Editar producto</h3>
+                <form asp-action="Edit" method="post">
+                    <input type="hidden" asp-for="IdProducto" />
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Nombre" class="form-label"></label>
+                            <input asp-for="Nombre" class="form-control" />
+                            <span asp-validation-for="Nombre" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="CodigoBarras" class="form-label"></label>
+                            <input asp-for="CodigoBarras" class="form-control" />
+                            <span asp-validation-for="CodigoBarras" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Precio" class="form-label"></label>
+                            <input asp-for="Precio" class="form-control" type="number" step="0.01" min="0.01" />
+                            <span asp-validation-for="Precio" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Marca" class="form-label"></label>
+                            <input asp-for="Marca" class="form-control" />
+                            <span asp-validation-for="Marca" class="text-danger"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="IdCategoria" class="form-label"></label>
+                            <select asp-for="IdCategoria" asp-items="ViewBag.Categorias" class="form-select"></select>
+                            <span asp-validation-for="IdCategoria" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-modern-primary">Guardar cambios</button>
+                        <a asp-action="Index" class="btn btn-modern-secondary">Volver</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

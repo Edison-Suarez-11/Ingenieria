@@ -1,0 +1,164 @@
+:root {
+  --bg: #f2fbf6;
+  --surface: #ffffff;
+  --primary: #00b36b;
+  --primary-dark: #00985b;
+  --accent: #7c5cff;
+  --accent-dark: #5f43ea;
+  --teal: #14b8a6;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --border: #e6f3ec;
+}
+
+html, body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  background:
+    radial-gradient(900px 500px at 15% 0%, rgba(124, 92, 255, 0.14) 0%, rgba(124, 92, 255, 0) 60%),
+    radial-gradient(900px 500px at 85% 10%, rgba(0, 179, 107, 0.18) 0%, rgba(0, 179, 107, 0) 60%),
+    linear-gradient(180deg, #fbfffd 0%, var(--bg) 100%);
+  color: var(--text);
+}
+
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0.75rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 10px 30px rgba(16, 24, 40, 0.08);
+}
+
+.brand {
+  color: var(--text);
+  font-weight: 800;
+  font-size: 1.35rem;
+  text-decoration: none;
+}
+
+.brand:hover {
+  color: var(--accent-dark);
+}
+
+.brand-logo {
+  border-radius: 14px;
+  box-shadow: 0 10px 22px rgba(16, 24, 40, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+}
+
+.menu-link {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.5rem 0.9rem;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.menu-link:hover {
+  background: rgba(0, 179, 107, 0.12);
+  color: var(--primary-dark);
+}
+
+.card-modern {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 18px 34px rgba(16, 24, 40, 0.08);
+  background: var(--surface);
+}
+
+.btn-modern-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--teal) 100%);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 0.6rem 1rem;
+  font-weight: 600;
+}
+
+.btn-modern-primary:hover {
+  filter: brightness(0.96);
+  color: #fff;
+}
+
+.btn-modern-secondary {
+  background: #fff;
+  color: var(--accent-dark);
+  border: 1px solid rgba(124, 92, 255, 0.45);
+  border-radius: 12px;
+  padding: 0.6rem 1rem;
+  font-weight: 600;
+}
+
+.btn-modern-secondary:hover {
+  background: rgba(124, 92, 255, 0.10);
+  color: var(--accent-dark);
+}
+
+.table-modern {
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+.table-modern thead th {
+  background: rgba(0, 179, 107, 0.12);
+  color: #0f2d22;
+  border: none;
+}
+
+.table-modern td {
+  vertical-align: middle;
+}
+
+.hero {
+  background:
+    radial-gradient(700px 240px at 15% 20%, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 65%),
+    linear-gradient(135deg, var(--accent) 0%, var(--teal) 55%, var(--primary) 100%);
+  color: #fff;
+  border-radius: 20px;
+  padding: 2.25rem;
+}
+
+.hero h1 {
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.hero p {
+  color: rgba(255, 255, 255, 0.90);
+}
+
+.kpi {
+  border-radius: 16px;
+  padding: 1.1rem 1.2rem;
+  background: #fff;
+  border: 1px solid var(--border);
+}
+
+.kpi small {
+  color: var(--muted);
+}
+
+.kpi strong {
+  font-size: 1.35rem;
+}
+
+.footer-modern {
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.92rem;
+  padding: 1rem 0;
+  margin-top: 2rem;
+  background: #ffffffbc;
+}
+
+.alert-modern {
+  border-radius: 12px;
+  border: none;
+}

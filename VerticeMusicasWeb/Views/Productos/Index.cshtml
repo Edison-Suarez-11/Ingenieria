@@ -1,0 +1,63 @@
+@model IEnumerable<VerticeMusicasWeb.Models.Producto>
+@{
+    ViewData["Title"] = "Productos";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-0">Gestionar productos</h2>
+        <small class="text-muted">Catalogo con precio, marca y categoria.</small>
+    </div>
+    <a class="btn btn-modern-primary" asp-action="Create">Nuevo producto</a>
+</div>
+
+<form method="get" class="card card-modern mb-3">
+    <div class="card-body row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label mb-0 small text-muted">Categoria</label>
+            <select name="categoriaId" asp-items="ViewBag.CategoriasFiltro" class="form-select"></select>
+        </div>
+        <div class="col-md-5">
+            <label class="form-label mb-0 small text-muted">Buscar</label>
+            <input type="text" name="q" value="@ViewBag.Term" class="form-control" placeholder="Nombre o codigo de barras" />
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-modern-secondary flex-grow-1">Filtrar</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Limpiar</a>
+        </div>
+    </div>
+</form>
+
+<div class="card card-modern">
+    <div class="card-body table-responsive">
+        <table class="table table-hover table-modern mb-0">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Codigo</th>
+                    <th class="text-end">Precio</th>
+                    <th>Marca</th>
+                    <th>Categoria</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.IdProducto</td>
+                    <td>@item.Nombre</td>
+                    <td>@item.CodigoBarras</td>
+                    <td class="text-end">@item.Precio.ToString("N2")</td>
+                    <td>@(string.IsNullOrEmpty(item.Marca) ? "—" : item.Marca)</td>
+                    <td>@(item.Categoria?.NombreCategoria ?? "-")</td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-modern-secondary" asp-action="Edit" asp-route-id="@item.IdProducto">Editar</a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,70 @@
+@{
+    ViewData["Title"] = "Inicio";
+}
+
+<section class="hero mb-4">
+    <h1>Vertice Muisca</h1>
+    <p class="mb-0">Gestiona categorias, productos, inventario y consulta de stock desde la web.</p>
+</section>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="kpi">
+            <small>Categorias</small>
+            <div class="d-flex justify-content-between align-items-center mt-1">
+                <strong>@(ViewBag.CantidadCategorias ?? 0) registradas</strong>
+                <a class="btn btn-modern-secondary btn-sm" asp-controller="Categorias" asp-action="Index">Abrir</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="kpi">
+            <small>Productos</small>
+            <div class="d-flex justify-content-between align-items-center mt-1">
+                <strong>@(ViewBag.CantidadProductos ?? 0) en catalogo</strong>
+                <a class="btn btn-modern-primary btn-sm" asp-controller="Productos" asp-action="Index">Abrir</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="kpi">
+            <small>Movimientos de stock</small>
+            <div class="d-flex justify-content-between align-items-center mt-1">
+                <strong>@(ViewBag.CantidadMovimientos ?? 0) lineas</strong>
+                <a class="btn btn-modern-secondary btn-sm" asp-controller="Inventario" asp-action="Index">Abrir</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card card-modern h-100">
+            <div class="card-body">
+                <h5 class="mb-2">Inventario</h5>
+                <p class="text-muted mb-3">Registra entradas con fecha, producto y cantidad.</p>
+                <a class="btn btn-modern-primary" asp-controller="Inventario" asp-action="Create">Nueva entrada</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card card-modern h-100">
+            <div class="card-body">
+                <h5 class="mb-2">Consulta de stock</h5>
+                <p class="text-muted mb-3">Consulta disponibilidad agregada por producto con filtros.</p>
+                <a class="btn btn-modern-secondary" asp-controller="ConsultaStock" asp-action="Index">Ver stock</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card card-modern">
+    <div class="card-body">
+        <h5 class="mb-2">Accesos rapidos</h5>
+        <p class="text-muted mb-3">Comienza registrando categorias, luego productos y movimientos.</p>
+        <div class="d-flex gap-2 flex-wrap">
+            <a class="btn btn-modern-primary" asp-controller="Categorias" asp-action="Create">Nueva categoria</a>
+            <a class="btn btn-modern-secondary" asp-controller="Productos" asp-action="Create">Nuevo producto</a>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": ".NET WinForms (InventarioApp)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build InventarioApp",
+      "program": "${workspaceFolder}/bin/Debug/net8.0-windows/InventarioApp.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "console": "internalConsole"
+    }
+  ]
+}

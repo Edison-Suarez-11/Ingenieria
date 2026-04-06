@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\VerticeMuiscaWeb.props" />
+</Project>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Vertice Muisca</title>
+    <link rel="icon" type="image/png" href="~/favicon.png" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/VerticeMuiscaWeb.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <header class="topbar">
+        <div class="container d-flex flex-wrap justify-content-between align-items-center">
+            <a class="brand d-flex align-items-center gap-2" asp-controller="Dashboard" asp-action="Index">
+                <img src="~/img/logo-empresa.png" alt="Logo Vertice Muisca" width="56" height="56" class="brand-logo" />
+                <span>Vertice Muisca</span>
+            </a>
+            <nav class="d-flex flex-wrap gap-1 gap-md-2 justify-content-end">
+                <a class="menu-link" asp-controller="Dashboard" asp-action="Index">Inicio</a>
+                <a class="menu-link" asp-controller="Categorias" asp-action="Index">Categorias</a>
+                <a class="menu-link" asp-controller="Productos" asp-action="Index">Productos</a>
+                <a class="menu-link" asp-controller="Inventario" asp-action="Index">Inventario</a>
+                <a class="menu-link" asp-controller="ConsultaStock" asp-action="Index">Stock</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container py-4">
+        @if (TempData["Success"] is string success)
+        {
+            <div class="alert alert-success alert-modern">@success</div>
+        }
+        @if (TempData["Error"] is string error)
+        {
+            <div class="alert alert-danger alert-modern">@error</div>
+        }
+
+        @RenderBody()
+    </main>
+
+    <footer class="footer-modern">
+        <div class="container">
+            <span>© 2026 Vertice Muisca - Sistema de gestion de supermercado</span>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,61 @@
+@model List<VerticeMusicasWeb.Models.StockDisponibleRow>
+@{
+    ViewData["Title"] = "Consulta de stock";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-0">Stock disponible</h2>
+        <small class="text-muted">Suma de movimientos por producto (solo con cantidad &gt; 0).</small>
+    </div>
+</div>
+
+<form method="get" class="card card-modern mb-3">
+    <div class="card-body row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label mb-0 small text-muted">Categoria</label>
+            <select name="categoriaId" asp-items="ViewBag.CategoriasFiltro" class="form-select"></select>
+        </div>
+        <div class="col-md-5">
+            <label class="form-label mb-0 small text-muted">Buscar</label>
+            <input type="text" name="q" value="@ViewBag.Term" class="form-control" placeholder="Nombre o codigo de barras" />
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-modern-secondary flex-grow-1">Filtrar</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Limpiar</a>
+        </div>
+    </div>
+</form>
+
+<div class="card card-modern">
+    <div class="card-body table-responsive">
+        @if (Model.Count == 0)
+        {
+            <p class="text-muted mb-0">No hay stock disponible con los filtros actuales.</p>
+        }
+        else
+        {
+            <table class="table table-hover table-modern mb-0">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Codigo</th>
+                        <th>Categoria</th>
+                        <th class="text-end">Cantidad disponible</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.NombreProducto</td>
+                        <td>@item.CodigoBarras</td>
+                        <td>@item.NombreCategoria</td>
+                        <td class="text-end"><strong>@item.CantidadDisponible</strong></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
