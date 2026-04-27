@@ -17,7 +17,7 @@ public class Producto
     public string CodigoBarras { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "El precio es obligatorio.")]
-    [Range(typeof(decimal), "0.01", "79228162514264337593543950335", ErrorMessage = "El precio debe ser mayor a cero.")]
+    [Range(0.01, double.MaxValue, ErrorMessage = "El precio debe ser mayor a cero.")]
     [Display(Name = "Precio")]
     public decimal Precio { get; set; }
 
