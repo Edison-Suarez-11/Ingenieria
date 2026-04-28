@@ -50,7 +50,7 @@
                 <tbody>
                 @foreach (var item in Model)
                 {
-                    <tr>
+                    <tr class="@(item.Cantidad <= 0 ? "table-warning" : "")">
                         <td>@item.IdInventario</td>
                         <td>@item.Fecha.ToString("yyyy-MM-dd")</td>
                         <td>@item.NombreProducto</td>

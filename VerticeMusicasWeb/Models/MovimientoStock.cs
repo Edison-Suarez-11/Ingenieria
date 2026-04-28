@@ -9,8 +9,11 @@ public class MovimientoStock
     public int IdStock { get; set; }
 
     [Required]
-    [Range(1, int.MaxValue, ErrorMessage = "La cantidad debe ser mayor a cero.")]
     public int Cantidad { get; set; }
+
+    [Range(0, int.MaxValue, ErrorMessage = "El stock minimo no puede ser negativo.")]
+    [Display(Name = "Stock minimo")]
+    public int StockMinimo { get; set; }
 
     [Display(Name = "Inventario")]
     public int IdInventario { get; set; }

@@ -8,7 +8,7 @@
 </section>
 
 <div class="row g-3 mb-4">
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="kpi">
             <small>Categorias</small>
             <div class="d-flex justify-content-between align-items-center mt-1">
@@ -17,7 +17,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="kpi">
             <small>Productos</small>
             <div class="d-flex justify-content-between align-items-center mt-1">
@@ -26,12 +26,21 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="kpi">
             <small>Movimientos de stock</small>
             <div class="d-flex justify-content-between align-items-center mt-1">
                 <strong>@(ViewBag.CantidadMovimientos ?? 0) lineas</strong>
                 <a class="btn btn-modern-secondary btn-sm" asp-controller="Inventario" asp-action="Index">Abrir</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="kpi">
+            <small>Ventas</small>
+            <div class="d-flex justify-content-between align-items-center mt-1">
+                <strong>@(ViewBag.CantidadVentas ?? 0) registradas</strong>
+                <a class="btn btn-modern-primary btn-sm" asp-controller="Ventas" asp-action="Create">Abrir</a>
             </div>
         </div>
     </div>
@@ -65,6 +74,37 @@
         <div class="d-flex gap-2 flex-wrap">
             <a class="btn btn-modern-primary" asp-controller="Categorias" asp-action="Create">Nueva categoria</a>
             <a class="btn btn-modern-secondary" asp-controller="Productos" asp-action="Create">Nuevo producto</a>
+            <a class="btn btn-modern-primary" asp-controller="Ventas" asp-action="Create">Registrar venta</a>
         </div>
     </div>
 </div>
+
+@if (ViewBag.AlertasStock is List<VerticeMusicasWeb.Models.StockDisponibleRow> alertas && alertas.Count > 0)
+{
+    <div class="card card-modern mt-4 border-danger">
+        <div class="card-body">
+            <h5 class="text-danger mb-3">Alertas de stock minimo</h5>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th class="text-end">Disponible</th>
+                            <th class="text-end">Minimo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var item in alertas)
+                    {
+                        <tr class="table-danger">
+                            <td>@item.NombreProducto</td>
+                            <td class="text-end">@item.CantidadDisponible</td>
+                            <td class="text-end">@item.StockMinimo</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}

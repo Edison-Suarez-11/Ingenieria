@@ -38,6 +38,13 @@
                             <select asp-for="IdCategoria" asp-items="ViewBag.Categorias" class="form-select"></select>
                             <span asp-validation-for="IdCategoria" class="text-danger"></span>
                         </div>
+                        <div class="col-12">
+                            <div class="form-check mt-1">
+                                <input asp-for="ManejaStock" class="form-check-input" />
+                                <label asp-for="ManejaStock" class="form-check-label"></label>
+                            </div>
+                            <span asp-validation-for="ManejaStock" class="text-danger"></span>
+                        </div>
                     </div>
 
                     <div class="d-flex gap-2 mt-4">

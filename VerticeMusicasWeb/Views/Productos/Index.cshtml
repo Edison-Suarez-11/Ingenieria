@@ -39,6 +39,7 @@
                     <th class="text-end">Precio</th>
                     <th>Marca</th>
                     <th>Categoria</th>
+                    <th>Stock</th>
                     <th class="text-end">Acciones</th>
                 </tr>
             </thead>
@@ -52,6 +53,16 @@
                     <td class="text-end">@item.Precio.ToString("N2")</td>
                     <td>@(string.IsNullOrEmpty(item.Marca) ? "—" : item.Marca)</td>
                     <td>@(item.Categoria?.NombreCategoria ?? "-")</td>
+                    <td>
+                        @if (item.ManejaStock)
+                        {
+                            <span class="badge text-bg-success">Controlado</span>
+                        }
+                        else
+                        {
+                            <span class="badge text-bg-secondary">No controla</span>
+                        }
+                    </td>
                     <td class="text-end">
                         <a class="btn btn-sm btn-modern-secondary" asp-action="Edit" asp-route-id="@item.IdProducto">Editar</a>
                     </td>

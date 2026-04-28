@@ -17,4 +17,8 @@ public class RegistrarEntradaViewModel
     [Range(1, int.MaxValue, ErrorMessage = "La cantidad debe ser mayor a cero.")]
     [Display(Name = "Cantidad")]
     public int Cantidad { get; set; } = 1;
+
+    [Range(0, int.MaxValue, ErrorMessage = "El stock minimo no puede ser negativo.")]
+    [Display(Name = "Stock minimo")]
+    public int StockMinimo { get; set; }
 }

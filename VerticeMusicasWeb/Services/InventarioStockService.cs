@@ -12,9 +12,19 @@ public class InventarioStockService(AppDbContext db)
 
     public async Task<int> RegistrarMovimientoAsync(DateTime fecha, int idProducto, int cantidad, CancellationToken ct = default)
     {
-        if (cantidad <= 0)
+        return await RegistrarMovimientoAsync(fecha, idProducto, cantidad, 0, ct);
+    }
+
+    public async Task<int> RegistrarMovimientoAsync(DateTime fecha, int idProducto, int cantidad, int stockMinimo, CancellationToken ct = default)
+    {
+        if (cantidad == 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(cantidad), "La cantidad debe ser mayor a cero.");
+            throw new ArgumentOutOfRangeException(nameof(cantidad), "La cantidad no puede ser cero.");
+        }
+
+        if (stockMinimo < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(stockMinimo), "El stock minimo no puede ser negativo.");
         }
 
         bool existeProducto = await db.Productos.AnyAsync(p => p.IdProducto == idProducto, ct);
@@ -33,6 +43,7 @@ public class InventarioStockService(AppDbContext db)
             db.MovimientosStock.Add(new MovimientoStock
             {
                 Cantidad = cantidad,
+                StockMinimo = stockMinimo,
                 IdInventario = inv.IdInventario,
                 IdProducto = idProducto
             });
@@ -139,10 +150,19 @@ public class InventarioStockService(AppDbContext db)
                 NombreProducto = p.Nombre,
                 CodigoBarras = p.CodigoBarras,
                 NombreCategoria = p.Categoria!.NombreCategoria,
-                CantidadDisponible = p.MovimientosStock.Sum(m => (int?)m.Cantidad) ?? 0
+                CantidadDisponible = p.MovimientosStock.Sum(m => (int?)m.Cantidad) ?? 0,
+                StockMinimo = p.MovimientosStock.Select(m => (int?)m.StockMinimo).Max() ?? 0,
+                ManejaStock = p.ManejaStock
             })
-            .Where(x => x.CantidadDisponible > 0)
-            .OrderByDescending(x => x.CantidadDisponible)
+            .OrderBy(x => x.CantidadDisponible)
             .ToListAsync(ct);
+    }
+
+    public async Task<int> ObtenerStockMinimoActualAsync(int idProducto, CancellationToken ct = default)
+    {
+        return await db.MovimientosStock
+            .Where(m => m.IdProducto == idProducto)
+            .Select(m => (int?)m.StockMinimo)
+            .MaxAsync(ct) ?? 0;
     }
 }

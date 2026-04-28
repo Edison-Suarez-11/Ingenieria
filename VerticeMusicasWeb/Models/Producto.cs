@@ -25,6 +25,9 @@ public class Producto
     [MaxLength(120)]
     public string? Marca { get; set; }
 
+    [Display(Name = "Maneja stock")]
+    public bool ManejaStock { get; set; } = true;
+
     [Range(1, int.MaxValue, ErrorMessage = "Debes seleccionar una categoria.")]
     [Display(Name = "Categoria")]
     public int IdCategoria { get; set; }

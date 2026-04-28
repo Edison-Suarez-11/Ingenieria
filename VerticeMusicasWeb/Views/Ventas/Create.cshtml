@@ -1,0 +1,283 @@
+@model VerticeMusicasWeb.Models.RegistrarVentaViewModel
+@{
+    ViewData["Title"] = "Registrar venta";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-0">Gestion de ventas</h2>
+        <small class="text-muted">Carrito de venta con integracion de inventario.</small>
+    </div>
+</div>
+
+<div class="card card-modern mb-3">
+    <div class="card-body">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+
+        <div class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label">Buscar producto</label>
+                <input id="txtBuscarProducto" type="text" class="form-control" placeholder="Nombre o codigo de barras" list="listaSugerenciasProductos" autocomplete="off" />
+                <datalist id="listaSugerenciasProductos"></datalist>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Cantidad</label>
+                <input id="txtCantidad" type="number" min="1" value="1" class="form-control" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Precio unitario</label>
+                <input id="txtPrecioUnitario" type="text" readonly class="form-control" />
+            </div>
+            <div class="col-md-2 d-grid">
+                <button type="button" class="btn btn-modern-primary" id="btnAgregar">Agregar</button>
+            </div>
+        </div>
+        <div class="mt-2 small text-muted" id="lblInfoProducto"></div>
+    </div>
+</div>
+
+<form asp-action="Create" method="post" id="formVenta" class="card card-modern">
+    @Html.AntiForgeryToken()
+    <div class="card-body">
+        <div class="table-responsive mb-3">
+            <table class="table table-hover table-modern mb-0" id="tablaCarrito">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Codigo</th>
+                        <th class="text-end">Cantidad</th>
+                        <th class="text-end">Precio unitario</th>
+                        <th class="text-end">Subtotal</th>
+                        <th class="text-end">Stock</th>
+                        <th class="text-end">Accion</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label asp-for="MetodoPago" class="form-label"></label>
+                <select asp-for="MetodoPago" class="form-select">
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="Nequi">Nequi</option>
+                    <option value="Daviplata">Daviplata</option>
+                    <option value="Otro">Otro</option>
+                </select>
+                <span asp-validation-for="MetodoPago" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Total</label>
+                <div class="form-control text-end fw-bold" id="lblTotal">$ 0.00</div>
+            </div>
+            <div class="col-md-4 d-grid">
+                <button type="submit" class="btn btn-modern-primary">Registrar venta</button>
+            </div>
+        </div>
+
+        <div id="itemsContainer"></div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const productos = @Html.Raw(ViewBag.ProductosJson ?? "[]");
+            const txtBuscar = document.getElementById('txtBuscarProducto');
+            const txtCantidad = document.getElementById('txtCantidad');
+            const txtPrecio = document.getElementById('txtPrecioUnitario');
+            const lblInfo = document.getElementById('lblInfoProducto');
+            const btnAgregar = document.getElementById('btnAgregar');
+            const datalist = document.getElementById('listaSugerenciasProductos');
+            const tbody = document.querySelector('#tablaCarrito tbody');
+            const lblTotal = document.getElementById('lblTotal');
+            const itemsContainer = document.getElementById('itemsContainer');
+
+            const formatMoney = (n) => new Intl.NumberFormat('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+            const normalize = (s) => (s || '').trim().toLowerCase();
+
+            let selected = null;
+            const cart = [];
+
+            const getProp = (obj, pascal, camel) => obj?.[pascal] ?? obj?.[camel];
+            const getNombre = (p) => getProp(p, 'Nombre', 'nombre') || '';
+            const getCodigo = (p) => getProp(p, 'CodigoBarras', 'codigoBarras') || '';
+            const getPrecio = (p) => Number(getProp(p, 'Precio', 'precio') || 0);
+            const getManeja = (p) => Boolean(getProp(p, 'ManejaStock', 'manejaStock'));
+            const getStockActual = (p) => Number(getProp(p, 'StockActual', 'stockActual') || 0);
+            const getStockMinimo = (p) => Number(getProp(p, 'StockMinimo', 'stockMinimo') || 0);
+            const getId = (p) => Number(getProp(p, 'IdProducto', 'idProducto') || 0);
+
+            const renderSugerencias = (input) => {
+                const term = normalize(input);
+                datalist.innerHTML = '';
+                if (!term) {
+                    return;
+                }
+
+                const matches = productos.filter(p =>
+                    normalize(getNombre(p)).includes(term) || normalize(getCodigo(p)).includes(term))
+                    .slice(0, 8);
+
+                matches.forEach(p => {
+                    const option = document.createElement('option');
+                    option.value = getCodigo(p);
+                    option.label = `${getNombre(p)} - ${getCodigo(p)}`;
+                    datalist.appendChild(option);
+                });
+            };
+
+            const matchProducto = (input) => {
+                const term = normalize(input);
+                if (!term) return null;
+
+                const exacto = productos.find(p =>
+                    normalize(getNombre(p)) === term || normalize(getCodigo(p)) === term);
+                if (exacto) {
+                    return exacto;
+                }
+
+                return productos.find(p =>
+                    normalize(getNombre(p)).includes(term) ||
+                    normalize(getCodigo(p)).includes(term)
+                ) || null;
+            };
+
+            const render = () => {
+                tbody.innerHTML = '';
+                itemsContainer.innerHTML = '';
+                let total = 0;
+
+                cart.forEach((item, idx) => {
+                    const subtotal = item.cantidad * item.precio;
+                    total += subtotal;
+
+                    const tr = document.createElement('tr');
+                    if (item.manejaStock && item.stockDespues <= item.stockMinimo) {
+                        tr.classList.add('table-danger');
+                    }
+                    tr.innerHTML = `
+                        <td>${item.nombre}</td>
+                        <td>${item.codigo}</td>
+                        <td class="text-end">${item.cantidad}</td>
+                        <td class="text-end">${formatMoney(item.precio)}</td>
+                        <td class="text-end">${formatMoney(subtotal)}</td>
+                        <td class="text-end">${item.manejaStock ? item.stockDespues : 'No aplica'}</td>
+                        <td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger" data-remove="${idx}">Quitar</button></td>
+                    `;
+                    tbody.appendChild(tr);
+
+                    const fields = [
+                        ['IdProducto', item.idProducto],
+                        ['NombreProducto', item.nombre],
+                        ['CodigoBarras', item.codigo],
+                        ['Cantidad', item.cantidad]
+                    ];
+                    fields.forEach(([name, value]) => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = `Items[${idx}].${name}`;
+                        input.value = value;
+                        itemsContainer.appendChild(input);
+                    });
+                });
+
+                lblTotal.textContent = `$ ${formatMoney(total)}`;
+            };
+
+            txtBuscar.addEventListener('input', () => {
+                renderSugerencias(txtBuscar.value);
+                selected = matchProducto(txtBuscar.value);
+                if (!selected) {
+                    txtPrecio.value = '';
+                    lblInfo.textContent = normalize(txtBuscar.value) ? 'No se encontraron productos con ese criterio.' : '';
+                    lblInfo.classList.add('text-danger');
+                    return;
+                }
+                const precio = getPrecio(selected);
+                const manejaStock = getManeja(selected);
+                const stockActual = getStockActual(selected);
+                const stockMinimo = getStockMinimo(selected);
+
+                txtPrecio.value = formatMoney(precio);
+                if (manejaStock) {
+                    if (stockActual <= stockMinimo) {
+                        lblInfo.textContent = `ALERTA: stock actual ${stockActual} (minimo ${stockMinimo}).`;
+                        lblInfo.classList.add('text-danger');
+                    } else {
+                        lblInfo.textContent = `Stock actual: ${stockActual} | Stock minimo: ${stockMinimo}`;
+                        lblInfo.classList.remove('text-danger');
+                    }
+                } else {
+                    lblInfo.textContent = 'Producto sin control de stock.';
+                    lblInfo.classList.remove('text-danger');
+                }
+            });
+
+            txtBuscar.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (selected) {
+                        btnAgregar.click();
+                    }
+                }
+            });
+
+            btnAgregar.addEventListener('click', () => {
+                const cantidad = Number(txtCantidad.value || '0');
+                if (!selected || cantidad <= 0) {
+                    alert('Selecciona un producto valido e ingresa una cantidad mayor a cero.');
+                    return;
+                }
+
+                const selectedId = getId(selected);
+                const selectedNombre = getNombre(selected);
+                const selectedCodigo = getCodigo(selected);
+                const selectedPrecio = getPrecio(selected);
+                const selectedManeja = getManeja(selected);
+                const selectedStockMinimo = getStockMinimo(selected);
+                const selectedStockActual = getStockActual(selected);
+
+                const existente2 = cart.find(i => i.idProducto === selectedId);
+                const stockActualCarrito = existente2 ? existente2.stockDespues : selectedStockActual;
+                const nuevaCantidad = (existente2 ? existente2.cantidad : 0) + cantidad;
+                const stockDespues = selectedManeja ? stockActualCarrito - cantidad : stockActualCarrito;
+
+                if (existente2) {
+                    existente2.cantidad = nuevaCantidad;
+                    existente2.stockDespues = stockDespues;
+                } else {
+                    cart.push({
+                        idProducto: selectedId,
+                        nombre: selectedNombre,
+                        codigo: selectedCodigo,
+                        cantidad: cantidad,
+                        precio: selectedPrecio,
+                        manejaStock: selectedManeja,
+                        stockMinimo: selectedStockMinimo,
+                        stockDespues: stockDespues
+                    });
+                }
+
+                render();
+                txtCantidad.value = '1';
+                txtBuscar.value = '';
+                txtPrecio.value = '';
+                lblInfo.textContent = '';
+                txtBuscar.focus();
+            });
+
+            tbody.addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-remove]');
+                if (!btn) return;
+                const idx = Number(btn.getAttribute('data-remove'));
+                if (idx >= 0) {
+                    cart.splice(idx, 1);
+                    render();
+                }
+            });
+        })();
+    </script>
+}

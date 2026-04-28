@@ -6,7 +6,7 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
         <h2 class="mb-0">Stock disponible</h2>
-        <small class="text-muted">Suma de movimientos por producto (solo con cantidad &gt; 0).</small>
+        <small class="text-muted">Suma de movimientos por producto con alertas de stock minimo.</small>
     </div>
 </div>
 
@@ -41,17 +41,38 @@
                         <th>Producto</th>
                         <th>Codigo</th>
                         <th>Categoria</th>
+                        <th class="text-end">Stock minimo</th>
                         <th class="text-end">Cantidad disponible</th>
+                        <th>Estado</th>
                     </tr>
                 </thead>
                 <tbody>
                 @foreach (var item in Model)
                 {
-                    <tr>
+                    <tr class="@(item.AlertaStockMinimo ? "table-danger" : "")">
                         <td>@item.NombreProducto</td>
                         <td>@item.CodigoBarras</td>
                         <td>@item.NombreCategoria</td>
+                        <td class="text-end">@item.StockMinimo</td>
                         <td class="text-end"><strong>@item.CantidadDisponible</strong></td>
+                        <td>
+                            @if (!item.ManejaStock)
+                            {
+                                <span class="badge text-bg-secondary">No controla stock</span>
+                            }
+                            else if (item.AlertaStockCritico)
+                            {
+                                <span class="badge text-bg-danger">Critico</span>
+                            }
+                            else if (item.AlertaStockMinimo)
+                            {
+                                <span class="badge text-bg-warning">Bajo minimo</span>
+                            }
+                            else
+                            {
+                                <span class="badge text-bg-success">Normal</span>
+                            }
+                        </td>
                     </tr>
                 }
                 </tbody>

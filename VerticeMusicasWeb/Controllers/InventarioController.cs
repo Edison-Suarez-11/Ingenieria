@@ -46,7 +46,7 @@ public class InventarioController(AppDbContext context, InventarioStockService i
 
         try
         {
-            await inventarioStock.RegistrarMovimientoAsync(model.Fecha, model.IdProducto, model.Cantidad);
+            await inventarioStock.RegistrarMovimientoAsync(model.Fecha, model.IdProducto, model.Cantidad, model.StockMinimo);
             TempData["Success"] = "Entrada de inventario registrada correctamente.";
             return RedirectToAction(nameof(Index));
         }

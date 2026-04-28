@@ -23,6 +23,11 @@
                             <input asp-for="Cantidad" class="form-control" min="1" />
                             <span asp-validation-for="Cantidad" class="text-danger"></span>
                         </div>
+                        <div class="col-md-6">
+                            <label asp-for="StockMinimo" class="form-label"></label>
+                            <input asp-for="StockMinimo" class="form-control" min="0" />
+                            <span asp-validation-for="StockMinimo" class="text-danger"></span>
+                        </div>
                         <div class="col-12">
                             <label asp-for="IdProducto" class="form-label"></label>
                             <select asp-for="IdProducto" asp-items="ViewBag.Productos" class="form-select">
