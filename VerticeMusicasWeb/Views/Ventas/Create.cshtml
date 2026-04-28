@@ -8,6 +8,7 @@
         <h2 class="mb-0">Gestion de ventas</h2>
         <small class="text-muted">Carrito de venta con integracion de inventario.</small>
     </div>
+    <a asp-action="Historial" class="btn btn-modern-secondary">Ver historial</a>
 </div>
 
 <div class="card card-modern mb-3">
@@ -80,10 +81,36 @@
     </div>
 </form>
 
+<div class="modal fade" id="modalStockCritico" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content stock-alert-modal">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Alerta de stock critico</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">Estos productos quedaron en minimo o por debajo del minimo despues de registrar la venta:</p>
+                <div id="stockCriticoContainer" class="d-flex flex-column gap-2"></div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-modern-primary" data-bs-dismiss="modal">Entendido</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
         (() => {
+            const stockCriticoRaw = '@Html.Raw(TempData["StockCriticoJson"] ?? "[]")';
+            let stockCriticoItems = [];
+            try {
+                stockCriticoItems = JSON.parse(stockCriticoRaw);
+            } catch {
+                stockCriticoItems = [];
+            }
+
             const productos = @Html.Raw(ViewBag.ProductosJson ?? "[]");
             const txtBuscar = document.getElementById('txtBuscarProducto');
             const txtCantidad = document.getElementById('txtCantidad');
@@ -94,9 +121,15 @@
             const tbody = document.querySelector('#tablaCarrito tbody');
             const lblTotal = document.getElementById('lblTotal');
             const itemsContainer = document.getElementById('itemsContainer');
+            const stockCriticoContainer = document.getElementById('stockCriticoContainer');
 
             const formatMoney = (n) => new Intl.NumberFormat('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
-            const normalize = (s) => (s || '').trim().toLowerCase();
+            const normalize = (s) => (s || '')
+                .toString()
+                .trim()
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '');
 
             let selected = null;
             const cart = [];
@@ -110,6 +143,31 @@
             const getStockMinimo = (p) => Number(getProp(p, 'StockMinimo', 'stockMinimo') || 0);
             const getId = (p) => Number(getProp(p, 'IdProducto', 'idProducto') || 0);
 
+            const buscarMatches = (term) => {
+                const exactosCodigo = [];
+                const inicianCodigo = [];
+                const inicianNombre = [];
+                const contienen = [];
+
+                productos.forEach(p => {
+                    const codigo = normalize(getCodigo(p));
+                    const nombre = normalize(getNombre(p));
+                    if (!codigo && !nombre) return;
+
+                    if (codigo === term) {
+                        exactosCodigo.push(p);
+                    } else if (codigo.startsWith(term)) {
+                        inicianCodigo.push(p);
+                    } else if (nombre.startsWith(term)) {
+                        inicianNombre.push(p);
+                    } else if (codigo.includes(term) || nombre.includes(term)) {
+                        contienen.push(p);
+                    }
+                });
+
+                return [...exactosCodigo, ...inicianCodigo, ...inicianNombre, ...contienen];
+            };
+
             const renderSugerencias = (input) => {
                 const term = normalize(input);
                 datalist.innerHTML = '';
@@ -117,14 +175,12 @@
                     return;
                 }
 
-                const matches = productos.filter(p =>
-                    normalize(getNombre(p)).includes(term) || normalize(getCodigo(p)).includes(term))
-                    .slice(0, 8);
+                const matches = buscarMatches(term).slice(0, 12);
 
                 matches.forEach(p => {
                     const option = document.createElement('option');
                     option.value = getCodigo(p);
-                    option.label = `${getNombre(p)} - ${getCodigo(p)}`;
+                    option.label = `${getNombre(p)} | $${formatMoney(getPrecio(p))} | ${getManeja(p) ? `Stock ${getStockActual(p)}` : 'Sin stock'}`;
                     datalist.appendChild(option);
                 });
             };
@@ -139,10 +195,8 @@
                     return exacto;
                 }
 
-                return productos.find(p =>
-                    normalize(getNombre(p)).includes(term) ||
-                    normalize(getCodigo(p)).includes(term)
-                ) || null;
+                const matches = buscarMatches(term);
+                return matches.length > 0 ? matches[0] : null;
             };
 
             const render = () => {
@@ -245,6 +299,11 @@
                 const nuevaCantidad = (existente2 ? existente2.cantidad : 0) + cantidad;
                 const stockDespues = selectedManeja ? stockActualCarrito - cantidad : stockActualCarrito;
 
+                if (selectedManeja && stockDespues < 0) {
+                    alert(`Stock insuficiente para ${selectedNombre}. Disponible: ${stockActualCarrito}.`);
+                    return;
+                }
+
                 if (existente2) {
                     existente2.cantidad = nuevaCantidad;
                     existente2.stockDespues = stockDespues;
@@ -278,6 +337,27 @@
                     render();
                 }
             });
+
+            if (stockCriticoItems.length > 0) {
+                stockCriticoItems.forEach(item => {
+                    const nombre = item.NombreProducto ?? item.nombreProducto ?? 'Producto';
+                    const codigo = item.CodigoBarras ?? item.codigoBarras ?? '-';
+                    const stockActual = Number(item.StockActual ?? item.stockActual ?? 0);
+                    const stockMinimo = Number(item.StockMinimo ?? item.stockMinimo ?? 0);
+                    const debajo = stockActual < stockMinimo;
+                    const div = document.createElement('div');
+                    div.className = `stock-alert-item ${debajo ? 'danger' : 'warning'}`;
+                    div.innerHTML = `
+                        <div class="fw-semibold">${nombre} (${codigo})</div>
+                        <div class="small">${debajo ? 'Debajo del minimo' : 'En stock minimo'}: ${stockActual} (minimo ${stockMinimo})</div>
+                    `;
+                    stockCriticoContainer.appendChild(div);
+                });
+
+                const modalElement = document.getElementById('modalStockCritico');
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            }
         })();
     </script>
 }

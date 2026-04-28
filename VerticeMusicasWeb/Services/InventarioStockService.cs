@@ -33,7 +33,8 @@ public class InventarioStockService(AppDbContext db)
             throw new InvalidOperationException("El producto no existe.");
         }
 
-        await using var tx = await db.Database.BeginTransactionAsync(ct);
+        bool usaTransaccionExistente = db.Database.CurrentTransaction is not null;
+        await using var tx = usaTransaccionExistente ? null : await db.Database.BeginTransactionAsync(ct);
         try
         {
             var inv = new Inventario { Fecha = FechaToTexto(fecha) };
@@ -48,12 +49,18 @@ public class InventarioStockService(AppDbContext db)
                 IdProducto = idProducto
             });
             await db.SaveChangesAsync(ct);
-            await tx.CommitAsync(ct);
+            if (!usaTransaccionExistente && tx is not null)
+            {
+                await tx.CommitAsync(ct);
+            }
             return inv.IdInventario;
         }
         catch
         {
-            await tx.RollbackAsync(ct);
+            if (!usaTransaccionExistente && tx is not null)
+            {
+                await tx.RollbackAsync(ct);
+            }
             throw;
         }
     }

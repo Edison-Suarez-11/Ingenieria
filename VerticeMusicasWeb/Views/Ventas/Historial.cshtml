@@ -1,0 +1,68 @@
+@model VerticeMusicasWeb.Models.VentaHistorialViewModel
+@{
+    ViewData["Title"] = "Historial de ventas";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-0">Historial de ventas</h2>
+        <small class="text-muted">Consulta las ventas registradas y su detalle.</small>
+    </div>
+    <a asp-action="Create" class="btn btn-modern-primary">Nueva venta</a>
+</div>
+
+@if (!Model.Ventas.Any())
+{
+    <div class="card card-modern">
+        <div class="card-body text-muted">Aun no hay ventas registradas.</div>
+    </div>
+}
+else
+{
+    <div class="d-flex flex-column gap-3">
+        @foreach (var venta in Model.Ventas)
+        {
+            <div class="card card-modern">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                        <div>
+                            <h5 class="mb-1">Venta #@venta.IdVenta</h5>
+                            <small class="text-muted">@venta.Fecha.ToString("dd/MM/yyyy HH:mm") - @venta.MetodoPago</small>
+                        </div>
+                        <div class="text-end">
+                            <div class="small text-muted">Total</div>
+                            <div class="fw-bold">$ @venta.Total.ToString("N2")</div>
+                            <div class="small text-muted">@venta.CantidadProductos unidades</div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-modern table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Codigo</th>
+                                    <th class="text-end">Cantidad</th>
+                                    <th class="text-end">Precio</th>
+                                    <th class="text-end">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var d in venta.Detalles)
+                                {
+                                    <tr>
+                                        <td>@d.NombreProducto</td>
+                                        <td>@d.CodigoBarras</td>
+                                        <td class="text-end">@d.Cantidad</td>
+                                        <td class="text-end">@d.PrecioUnitario.ToString("N2")</td>
+                                        <td class="text-end">@d.Subtotal.ToString("N2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

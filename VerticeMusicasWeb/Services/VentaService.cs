@@ -10,6 +10,23 @@ public class VentaService(AppDbContext db, InventarioStockService inventarioStoc
     private static string FechaToTexto(DateTime fecha) =>
         fecha.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
 
+    private static DateTime TextoToFecha(string fechaTexto)
+    {
+        if (DateTime.TryParseExact(
+            fechaTexto,
+            "yyyy-MM-dd HH:mm:ss",
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None,
+            out DateTime fecha))
+        {
+            return fecha;
+        }
+
+        return DateTime.TryParse(fechaTexto, out DateTime fechaFallback)
+            ? fechaFallback
+            : DateTime.MinValue;
+    }
+
     public async Task<List<ProductoVentaLookup>> BuscarProductosVentaAsync(string? term, CancellationToken ct = default)
     {
         IQueryable<Producto> query = db.Productos.AsNoTracking();
@@ -39,7 +56,7 @@ public class VentaService(AppDbContext db, InventarioStockService inventarioStoc
             .ToListAsync(ct);
     }
 
-    public async Task<int> RegistrarVentaAsync(RegistrarVentaViewModel model, CancellationToken ct = default)
+    public async Task<VentaRegistroResultado> RegistrarVentaAsync(RegistrarVentaViewModel model, CancellationToken ct = default)
     {
         if (model.Items.Count == 0)
         {
@@ -75,6 +92,7 @@ public class VentaService(AppDbContext db, InventarioStockService inventarioStoc
             total += p.Precio * cantidad;
         }
 
+        var resultado = new VentaRegistroResultado();
         await using var tx = await db.Database.BeginTransactionAsync(ct);
         try
         {
@@ -109,16 +127,75 @@ public class VentaService(AppDbContext db, InventarioStockService inventarioStoc
                 }
 
                 int stockMinimo = await inventarioStock.ObtenerStockMinimoActualAsync(idProducto, ct);
+                int stockActual = await inventarioStock.ObtenerStockCantidadActualAsync(idProducto, ct);
+                int stockDespues = stockActual - cantidad;
+
+                if (stockDespues < 0)
+                {
+                    throw new InvalidOperationException($"Stock insuficiente para el producto {producto.Nombre}. Disponible: {stockActual}.");
+                }
+
                 await inventarioStock.RegistrarMovimientoAsync(DateTime.Now, idProducto, -cantidad, stockMinimo, ct);
+
+                if (stockDespues <= stockMinimo)
+                {
+                    resultado.StockCriticoItems.Add(new StockCriticoVentaItem
+                    {
+                        NombreProducto = producto.Nombre,
+                        CodigoBarras = producto.CodigoBarras,
+                        StockActual = stockDespues,
+                        StockMinimo = stockMinimo
+                    });
+                }
             }
 
             await tx.CommitAsync(ct);
-            return venta.IdVenta;
+            resultado.IdVenta = venta.IdVenta;
+            return resultado;
         }
         catch
         {
             await tx.RollbackAsync(ct);
             throw;
         }
+    }
+
+    public async Task<VentaHistorialViewModel> ObtenerHistorialVentasAsync(CancellationToken ct = default)
+    {
+        List<Venta> ventas = await db.Ventas
+            .AsNoTracking()
+            .Include(v => v.Detalles)
+                .ThenInclude(d => d.Producto)
+            .OrderByDescending(v => v.IdVenta)
+            .ToListAsync(ct);
+
+        var vm = new VentaHistorialViewModel();
+
+        foreach (Venta v in ventas)
+        {
+            var item = new VentaHistorialItem
+            {
+                IdVenta = v.IdVenta,
+                Fecha = TextoToFecha(v.Fecha),
+                MetodoPago = v.MetodoPago,
+                Total = v.Total,
+                CantidadProductos = v.Detalles.Sum(d => d.Cantidad)
+            };
+
+            foreach (DetalleVenta d in v.Detalles.OrderBy(d => d.IdDetalle))
+            {
+                item.Detalles.Add(new VentaHistorialDetalleItem
+                {
+                    NombreProducto = d.Producto?.Nombre ?? "Producto eliminado",
+                    CodigoBarras = d.Producto?.CodigoBarras ?? "-",
+                    Cantidad = d.Cantidad,
+                    PrecioUnitario = d.PrecioUnitario
+                });
+            }
+
+            vm.Ventas.Add(item);
+        }
+
+        return vm;
     }
 }

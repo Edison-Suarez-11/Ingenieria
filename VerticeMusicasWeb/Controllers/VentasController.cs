@@ -7,6 +7,12 @@ namespace VerticeMusicasWeb.Controllers;
 
 public class VentasController(VentaService ventaService) : Controller
 {
+    public async Task<IActionResult> Historial()
+    {
+        VentaHistorialViewModel vm = await ventaService.ObtenerHistorialVentasAsync();
+        return View(vm);
+    }
+
     public async Task<IActionResult> Create(string? q)
     {
         List<ProductoVentaLookup> productos = await ventaService.BuscarProductosVentaAsync(q);
@@ -30,8 +36,12 @@ public class VentasController(VentaService ventaService) : Controller
 
         try
         {
-            int idVenta = await ventaService.RegistrarVentaAsync(model);
-            TempData["Success"] = $"Venta #{idVenta} registrada correctamente.";
+            VentaRegistroResultado resultado = await ventaService.RegistrarVentaAsync(model);
+            TempData["Success"] = $"Venta #{resultado.IdVenta} registrada correctamente.";
+            if (resultado.StockCriticoItems.Count > 0)
+            {
+                TempData["StockCriticoJson"] = JsonSerializer.Serialize(resultado.StockCriticoItems);
+            }
             return RedirectToAction(nameof(Create));
         }
         catch (Exception ex)
