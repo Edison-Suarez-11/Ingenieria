@@ -3,6 +3,10 @@
     ViewData["Title"] = "Nueva entrada de inventario";
 }
 
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" crossorigin="anonymous" />
+}
+
 <div class="row justify-content-center">
     <div class="col-lg-8">
         <div class="card card-modern">
@@ -48,5 +52,34 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js" crossorigin="anonymous"></script>
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const sel = document.getElementById('IdProducto');
+            if (!sel || typeof TomSelect === 'undefined') return;
+
+            new TomSelect(sel, {
+                allowEmptyOption: true,
+                create: false,
+                maxOptions: null,
+                sortField: { field: 'text', direction: 'asc' },
+                placeholder: 'Buscar por nombre o codigo...',
+                plugins: ['clear_button']
+            });
+
+            $(function () {
+                const fixIgnore = () => {
+                    $('form').each(function () {
+                        const v = $(this).data('validator');
+                        if (v) {
+                            v.settings.ignore = ':hidden:not(#IdProducto):not(#IdCategoria)';
+                        }
+                    });
+                };
+                fixIgnore();
+                setTimeout(fixIgnore, 0);
+            });
+        })();
+    </script>
 }

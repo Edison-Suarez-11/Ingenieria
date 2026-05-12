@@ -3,6 +3,10 @@
     ViewData["Title"] = "Editar producto";
 }
 
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" crossorigin="anonymous" />
+}
+
 <div class="row justify-content-center">
     <div class="col-lg-8">
         <div class="card card-modern">
@@ -58,5 +62,32 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js" crossorigin="anonymous"></script>
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const cat = document.getElementById('IdCategoria');
+            if (cat && typeof TomSelect !== 'undefined') {
+                new TomSelect(cat, {
+                    create: false,
+                    maxOptions: null,
+                    sortField: { field: 'text', direction: 'asc' },
+                    placeholder: 'Buscar categoria...'
+                });
+            }
+
+            $(function () {
+                const fixIgnore = () => {
+                    $('form').each(function () {
+                        const v = $(this).data('validator');
+                        if (v) {
+                            v.settings.ignore = ':hidden:not(#IdProducto):not(#IdCategoria)';
+                        }
+                    });
+                };
+                fixIgnore();
+                setTimeout(fixIgnore, 0);
+            });
+        })();
+    </script>
 }
