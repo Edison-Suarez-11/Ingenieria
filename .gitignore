@@ -14,6 +14,10 @@
 *.db-wal
 *.log
 
+# Conservar bases de datos del repositorio (copias y modelo)
+!/BasesDeDatos/*.db
+!/VerticeMusicasWeb/vertice_musicas.db
+
 # OS files
 .DS_Store
 Thumbs.db
