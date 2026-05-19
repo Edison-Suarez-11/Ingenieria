@@ -42,6 +42,7 @@ public class VentasController(VentaService ventaService) : Controller
             {
                 TempData["StockCriticoJson"] = JsonSerializer.Serialize(resultado.StockCriticoItems);
             }
+
             return RedirectToAction(nameof(Create));
         }
         catch (Exception ex)

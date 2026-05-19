@@ -25,14 +25,21 @@
                 <a class="menu-link" asp-controller="Ventas" asp-action="Historial">Historial ventas</a>
                 <a class="menu-link" asp-controller="Inventario" asp-action="Index">Inventario</a>
                 <a class="menu-link" asp-controller="ConsultaStock" asp-action="Index">Stock</a>
+                <a class="menu-link" asp-controller="Informes" asp-action="Index">Informes</a>
             </nav>
         </div>
     </header>
+
+    @await Component.InvokeAsync("AlertaStock")
 
     <main class="container py-4">
         @if (TempData["Success"] is string success)
         {
             <div class="alert alert-success alert-modern">@success</div>
+        }
+        @if (TempData["Warning"] is string warning)
+        {
+            <div class="alert alert-warning alert-modern">@warning</div>
         }
         @if (TempData["Error"] is string error)
         {

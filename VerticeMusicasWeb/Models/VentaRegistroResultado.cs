@@ -12,5 +12,7 @@ public class StockCriticoVentaItem
     public string CodigoBarras { get; set; } = string.Empty;
     public int StockActual { get; set; }
     public int StockMinimo { get; set; }
+    /// <summary>Tras la venta el inventario quedó en cero o negativo.</summary>
+    public bool StockEnCeroONegativo => StockActual <= 0;
     public bool DebajoDelMinimo => StockActual < StockMinimo;
 }

@@ -8,6 +8,9 @@
 *.user
 *.suo
 
+# Salida local de correos de prueba (sin SMTP)
+VerticeMusicasWeb/mail-outbox/
+
 # Runtime databases and logs
 *.db
 *.db-shm

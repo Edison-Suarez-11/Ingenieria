@@ -1,0 +1,223 @@
+@model VerticeMusicasWeb.Models.InformesViewModel
+@{
+    ViewData["Title"] = "Informes";
+    string fmtFecha(DateTime f) => f == DateTime.MinValue ? "-" : f.ToString("dd/MM/yyyy HH:mm");
+    string fmtMoney(decimal m) => m.ToString("C0", System.Globalization.CultureInfo.GetCultureInfo("es-CO"));
+}
+
+<div class="mb-4">
+    <h2 class="mb-0">Informes</h2>
+    <small class="text-muted">Ventas, entradas de inventario, salidas y productos mas vendidos.</small>
+</div>
+
+<div class="card card-modern mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Desde</label>
+                <input type="date" name="desde" class="form-control" value="@(Model.Desde?.ToString("yyyy-MM-dd"))" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Hasta</label>
+                <input type="date" name="hasta" class="form-control" value="@(Model.Hasta?.ToString("yyyy-MM-dd"))" />
+            </div>
+            <div class="col-md-4 d-flex gap-2">
+                <button type="submit" class="btn btn-modern-primary">Filtrar</button>
+                <a asp-action="Index" class="btn btn-modern-secondary">Ver todo</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="kpi">
+            <small>Ventas</small>
+            <strong class="d-block mt-1">@Model.Resumen.TotalVentas</strong>
+            <span class="text-muted small">@fmtMoney(Model.Resumen.MontoTotalVentas)</span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="kpi">
+            <small>Unidades vendidas</small>
+            <strong class="d-block mt-1">@Model.Resumen.UnidadesVendidas</strong>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="kpi">
+            <small>Entradas inventario</small>
+            <strong class="d-block mt-1">@Model.Resumen.EntradasInventario</strong>
+            <span class="text-muted small">@Model.Resumen.UnidadesIngresadas uds.</span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="kpi">
+            <small>Salidas inventario</small>
+            <strong class="d-block mt-1">@Model.Resumen.SalidasInventario</strong>
+            <span class="text-muted small">@Model.Resumen.UnidadesRetiradas uds.</span>
+        </div>
+    </div>
+</div>
+
+<ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-ventas" type="button">Ventas</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-entradas" type="button">Entradas / compras</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-salidas" type="button">Salidas</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-top" type="button">Mas vendidos</button></li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade show active" id="tab-ventas">
+        <div class="card card-modern">
+            <div class="card-body table-responsive">
+                @if (Model.Ventas.Count == 0)
+                {
+                    <p class="text-muted mb-0">No hay ventas en el periodo seleccionado.</p>
+                }
+                else
+                {
+                    <table class="table table-modern table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Fecha</th>
+                                <th>Pago</th>
+                                <th class="text-end">Total</th>
+                                <th class="text-end">Unidades</th>
+                                <th>Detalle</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var v in Model.Ventas)
+                        {
+                            <tr>
+                                <td>@v.IdVenta</td>
+                                <td>@fmtFecha(v.Fecha)</td>
+                                <td>@v.MetodoPago</td>
+                                <td class="text-end">@fmtMoney(v.Total)</td>
+                                <td class="text-end">@v.Unidades</td>
+                                <td class="small">@v.DetalleProductos</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="tab-entradas">
+        <div class="card card-modern">
+            <div class="card-body table-responsive">
+                <p class="text-muted small">Productos que ingresaron al inventario (cantidad positiva).</p>
+                @if (Model.EntradasInventario.Count == 0)
+                {
+                    <p class="text-muted mb-0">No hay entradas en el periodo.</p>
+                }
+                else
+                {
+                    <table class="table table-modern table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Producto</th>
+                                <th>Codigo</th>
+                                <th>Categoria</th>
+                                <th class="text-end">Cantidad</th>
+                                <th class="text-end">Stock min.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var e in Model.EntradasInventario)
+                        {
+                            <tr>
+                                <td>@fmtFecha(e.Fecha)</td>
+                                <td>@e.NombreProducto</td>
+                                <td>@e.CodigoBarras</td>
+                                <td>@e.NombreCategoria</td>
+                                <td class="text-end text-success fw-semibold">+@e.Cantidad</td>
+                                <td class="text-end">@e.StockMinimo</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="tab-salidas">
+        <div class="card card-modern">
+            <div class="card-body table-responsive">
+                <p class="text-muted small">Salidas de inventario (ventas y otros movimientos negativos).</p>
+                @if (Model.SalidasInventario.Count == 0)
+                {
+                    <p class="text-muted mb-0">No hay salidas en el periodo.</p>
+                }
+                else
+                {
+                    <table class="table table-modern table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Producto</th>
+                                <th>Codigo</th>
+                                <th>Categoria</th>
+                                <th class="text-end">Cantidad</th>
+                                <th>Motivo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var s in Model.SalidasInventario)
+                        {
+                            <tr>
+                                <td>@fmtFecha(s.Fecha)</td>
+                                <td>@s.NombreProducto</td>
+                                <td>@s.CodigoBarras</td>
+                                <td>@s.NombreCategoria</td>
+                                <td class="text-end text-danger fw-semibold">-@s.Cantidad</td>
+                                <td>@s.Motivo</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="tab-top">
+        <div class="card card-modern">
+            <div class="card-body table-responsive">
+                @if (Model.ProductosMasVendidos.Count == 0)
+                {
+                    <p class="text-muted mb-0">No hay datos de ventas en el periodo.</p>
+                }
+                else
+                {
+                    <table class="table table-modern table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Codigo</th>
+                                <th class="text-end">Unidades</th>
+                                <th class="text-end">Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var p in Model.ProductosMasVendidos)
+                        {
+                            <tr>
+                                <td>@p.NombreProducto</td>
+                                <td>@p.CodigoBarras</td>
+                                <td class="text-end">@p.UnidadesVendidas</td>
+                                <td class="text-end">@fmtMoney(p.MontoTotal)</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+</div>

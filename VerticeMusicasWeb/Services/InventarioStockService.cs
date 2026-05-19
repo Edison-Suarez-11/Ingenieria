@@ -172,4 +172,30 @@ public class InventarioStockService(AppDbContext db)
             .Select(m => (int?)m.StockMinimo)
             .MaxAsync(ct) ?? 0;
     }
+
+    /// <summary>Devuelve datos para alerta si el producto maneja stock y la cantidad actual está en o bajo el mínimo.</summary>
+    public async Task<StockCriticoVentaItem?> ObtenerItemAlertaSiStockEnMinimoAsync(int idProducto, CancellationToken ct = default)
+    {
+        Producto? producto = await db.Productos.AsNoTracking()
+            .FirstOrDefaultAsync(p => p.IdProducto == idProducto, ct);
+        if (producto is null || !producto.ManejaStock)
+        {
+            return null;
+        }
+
+        int minimo = await ObtenerStockMinimoActualAsync(idProducto, ct);
+        int actual = await ObtenerStockCantidadActualAsync(idProducto, ct);
+        if (actual > minimo)
+        {
+            return null;
+        }
+
+        return new StockCriticoVentaItem
+        {
+            NombreProducto = producto.Nombre,
+            CodigoBarras = producto.CodigoBarras,
+            StockActual = actual,
+            StockMinimo = minimo
+        };
+    }
 }

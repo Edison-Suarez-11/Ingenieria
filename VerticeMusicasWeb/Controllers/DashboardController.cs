@@ -19,7 +19,6 @@ public class DashboardController(AppDbContext context, InventarioStockService in
         ViewBag.AlertasStock = stock
             .Where(x => x.AlertaStockMinimo)
             .OrderBy(x => x.CantidadDisponible)
-            .Take(5)
             .ToList();
         return View();
     }

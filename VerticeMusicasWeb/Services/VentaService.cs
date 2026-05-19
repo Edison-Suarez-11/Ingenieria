@@ -38,7 +38,8 @@ public class VentaService(AppDbContext db, InventarioStockService inventarioStoc
             query = query.Where(p =>
                 EF.Functions.Like(p.Nombre, like) ||
                 p.CodigoBarras == normalized ||
-                EF.Functions.Like(p.CodigoBarras, like));
+                EF.Functions.Like(p.CodigoBarras, like) ||
+                (p.Marca != null && EF.Functions.Like(p.Marca, like)));
         }
 
         return await query
@@ -48,6 +49,7 @@ public class VentaService(AppDbContext db, InventarioStockService inventarioStoc
                 IdProducto = p.IdProducto,
                 Nombre = p.Nombre,
                 CodigoBarras = p.CodigoBarras,
+                Marca = p.Marca ?? string.Empty,
                 Precio = p.Precio,
                 ManejaStock = p.ManejaStock,
                 StockActual = p.MovimientosStock.Sum(m => (int?)m.Cantidad) ?? 0,
@@ -58,7 +60,11 @@ public class VentaService(AppDbContext db, InventarioStockService inventarioStoc
 
     public async Task<VentaRegistroResultado> RegistrarVentaAsync(RegistrarVentaViewModel model, CancellationToken ct = default)
     {
-        if (model.Items.Count == 0)
+        List<RegistrarVentaItemViewModel> lineas = model.Items
+            .Where(i => i.IdProducto > 0 && i.Cantidad > 0)
+            .ToList();
+
+        if (lineas.Count == 0)
         {
             throw new InvalidOperationException("Debes agregar al menos un producto.");
         }
@@ -68,29 +74,26 @@ public class VentaService(AppDbContext db, InventarioStockService inventarioStoc
             throw new InvalidOperationException("Debes seleccionar un metodo de pago.");
         }
 
-        Dictionary<int, int> cantidadesPorProducto = model.Items
-            .GroupBy(x => x.IdProducto)
-            .ToDictionary(g => g.Key, g => g.Sum(x => x.Cantidad));
+        foreach (RegistrarVentaItemViewModel linea in lineas)
+        {
+            if (linea.PrecioUnitario <= 0)
+            {
+                throw new InvalidOperationException(
+                    $"El precio unitario del producto «{linea.NombreProducto}» debe ser mayor a cero.");
+            }
+        }
 
+        HashSet<int> idsProducto = lineas.Select(l => l.IdProducto).ToHashSet();
         List<Producto> productos = await db.Productos
-            .Where(p => cantidadesPorProducto.Keys.Contains(p.IdProducto))
+            .Where(p => idsProducto.Contains(p.IdProducto))
             .ToListAsync(ct);
 
-        if (productos.Count != cantidadesPorProducto.Count)
+        if (productos.Count != idsProducto.Count)
         {
             throw new InvalidOperationException("Uno o mas productos del carrito no existen.");
         }
 
-        decimal total = 0m;
-        foreach (Producto p in productos)
-        {
-            int cantidad = cantidadesPorProducto[p.IdProducto];
-            if (cantidad <= 0)
-            {
-                throw new InvalidOperationException("La cantidad debe ser mayor a cero.");
-            }
-            total += p.Precio * cantidad;
-        }
+        decimal total = lineas.Sum(l => l.PrecioUnitario * l.Cantidad);
 
         var resultado = new VentaRegistroResultado();
         await using var tx = await db.Database.BeginTransactionAsync(ct);
@@ -105,20 +108,24 @@ public class VentaService(AppDbContext db, InventarioStockService inventarioStoc
             db.Ventas.Add(venta);
             await db.SaveChangesAsync(ct);
 
-            foreach ((int idProducto, int cantidad) in cantidadesPorProducto)
+            foreach (RegistrarVentaItemViewModel linea in lineas)
             {
-                Producto producto = productos.First(p => p.IdProducto == idProducto);
                 db.DetallesVenta.Add(new DetalleVenta
                 {
                     IdVenta = venta.IdVenta,
-                    IdProducto = idProducto,
-                    Cantidad = cantidad,
-                    PrecioUnitario = producto.Precio
+                    IdProducto = linea.IdProducto,
+                    Cantidad = linea.Cantidad,
+                    PrecioUnitario = linea.PrecioUnitario
                 });
             }
+
             await db.SaveChangesAsync(ct);
 
-            foreach ((int idProducto, int cantidad) in cantidadesPorProducto)
+            Dictionary<int, int> cantidadesPorProducto = lineas
+                .GroupBy(l => l.IdProducto)
+                .ToDictionary(g => g.Key, g => g.Sum(l => l.Cantidad));
+
+            foreach ((int idProducto, int cantidadVendida) in cantidadesPorProducto)
             {
                 Producto producto = productos.First(p => p.IdProducto == idProducto);
                 if (!producto.ManejaStock)
@@ -128,16 +135,11 @@ public class VentaService(AppDbContext db, InventarioStockService inventarioStoc
 
                 int stockMinimo = await inventarioStock.ObtenerStockMinimoActualAsync(idProducto, ct);
                 int stockActual = await inventarioStock.ObtenerStockCantidadActualAsync(idProducto, ct);
-                int stockDespues = stockActual - cantidad;
+                int stockDespues = stockActual - cantidadVendida;
 
-                if (stockDespues < 0)
-                {
-                    throw new InvalidOperationException($"Stock insuficiente para el producto {producto.Nombre}. Disponible: {stockActual}.");
-                }
+                await inventarioStock.RegistrarMovimientoAsync(DateTime.Now, idProducto, -cantidadVendida, stockMinimo, ct);
 
-                await inventarioStock.RegistrarMovimientoAsync(DateTime.Now, idProducto, -cantidad, stockMinimo, ct);
-
-                if (stockDespues <= stockMinimo)
+                if (stockDespues <= 0)
                 {
                     resultado.StockCriticoItems.Add(new StockCriticoVentaItem
                     {

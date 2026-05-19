@@ -18,6 +18,9 @@ public class RegistrarVentaItemViewModel
     public string NombreProducto { get; set; } = string.Empty;
     public string CodigoBarras { get; set; } = string.Empty;
     public int Cantidad { get; set; }
+
+    [Range(0.01, double.MaxValue, ErrorMessage = "El precio unitario debe ser mayor a cero.")]
+    public decimal PrecioUnitario { get; set; }
 }
 
 public class ProductoVentaLookup
@@ -25,6 +28,7 @@ public class ProductoVentaLookup
     public int IdProducto { get; set; }
     public string Nombre { get; set; } = string.Empty;
     public string CodigoBarras { get; set; } = string.Empty;
+    public string Marca { get; set; } = string.Empty;
     public decimal Precio { get; set; }
     public bool ManejaStock { get; set; }
     public int StockActual { get; set; }

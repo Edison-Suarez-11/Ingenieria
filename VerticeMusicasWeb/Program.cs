@@ -11,6 +11,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite($"Data Source={dbPath}"));
 builder.Services.AddScoped<InventarioStockService>();
 builder.Services.AddScoped<VentaService>();
+builder.Services.AddScoped<InformesService>();
 
 var app = builder.Build();
 
@@ -78,18 +79,19 @@ static void EnsureSprint3Schema(AppDbContext db)
 
 static void EnsureColumnExists(System.Data.Common.DbConnection connection, string tableName, string columnName, string columnDefinition)
 {
-    using var command = connection.CreateCommand();
-    command.CommandText = $"PRAGMA table_info({tableName});";
-    using var reader = command.ExecuteReader();
-
     bool exists = false;
-    while (reader.Read())
+    using (var command = connection.CreateCommand())
     {
-        string? name = reader["name"]?.ToString();
-        if (string.Equals(name, columnName, StringComparison.OrdinalIgnoreCase))
+        command.CommandText = $"PRAGMA table_info({tableName});";
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
         {
-            exists = true;
-            break;
+            string? name = reader["name"]?.ToString();
+            if (string.Equals(name, columnName, StringComparison.OrdinalIgnoreCase))
+            {
+                exists = true;
+                break;
+            }
         }
     }
 
