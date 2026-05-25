@@ -27,6 +27,37 @@
   max-width: 32rem;
 }
 
+.informes-panel-export {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid var(--border, #e8e8e8);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.informes-panel-export-label strong {
+  display: block;
+  font-size: 0.9rem;
+}
+
+.informes-panel-export-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.informes-print-meta {
+  display: none;
+}
+
+.only-print {
+  display: none;
+}
+
 .informes-toolbar {
   padding: 0.85rem 1rem;
   margin-bottom: var(--inf-gap);
@@ -350,5 +381,81 @@
   }
   .informes-tab-group .nav {
     flex-wrap: wrap;
+  }
+}
+
+/* Impresion: solo la seccion activa (pestaña visible) */
+@media print {
+  body:has(.informes-page) header.topbar,
+  body:has(.informes-page) > .alert,
+  body:has(.informes-page) main > .alert,
+  body:has(.informes-page) .footer-modern,
+  .no-print,
+  .informes-toolbar,
+  .informes-nav-wrap,
+  .informes-panel-export,
+  .informes-kpis {
+    display: none !important;
+  }
+
+  body.informes-printing-one .informes-page,
+  .informes-page {
+    max-width: 100%;
+  }
+
+  .only-print,
+  .informes-print-meta {
+    display: block !important;
+    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
+  .informes-print-meta span {
+    display: block;
+    color: #444;
+  }
+
+  .informes-panel,
+  .card-modern {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+  }
+
+  .informes-print-section {
+    display: none !important;
+  }
+
+  body.informes-printing-one .informes-print-section.informes-print-active {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    height: auto !important;
+    page-break-inside: avoid;
+    margin-bottom: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+
+  body.informes-printing-one .informes-print-section.informes-print-active::before {
+    content: none;
+  }
+
+  .informes-empty {
+    font-size: 0.8rem;
+    color: #666;
+  }
+
+  .table {
+    font-size: 0.72rem;
+  }
+
+  .table th,
+  .table td {
+    padding: 0.25rem 0.35rem !important;
+  }
+
+  a[href]::after {
+    content: none !important;
   }
 }

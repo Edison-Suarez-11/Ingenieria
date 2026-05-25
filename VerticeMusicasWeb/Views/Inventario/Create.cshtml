@@ -12,7 +12,7 @@
         <div class="card card-modern">
             <div class="card-body p-4">
                 <h3 class="mb-3">Registrar entrada</h3>
-                <p class="text-muted small">Cada registro crea un movimiento de stock asociado a un proveedor y precio de compra.</p>
+                <p class="text-muted small">Selecciona proveedor, precio de compra y margen. El precio de venta sugerido se calcula en tiempo real; puedes ajustarlo y confirmar si deseas aplicarlo al producto.</p>
                 <form asp-action="Create" method="post">
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
 
@@ -44,15 +44,41 @@
                         </div>
                         <div class="col-md-6">
                             <label asp-for="PrecioUnitarioCompra" class="form-label"></label>
-                            <input asp-for="PrecioUnitarioCompra" class="form-control" min="0.01" step="0.01" />
+                            <input asp-for="PrecioUnitarioCompra" class="form-control" id="PrecioUnitarioCompra" min="0.01" step="0.01" />
                             <span asp-validation-for="PrecioUnitarioCompra" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="PorcentajeMargenVenta" class="form-label"></label>
+                            <div class="input-group">
+                                <input asp-for="PorcentajeMargenVenta" class="form-control" id="PorcentajeMargenVenta" min="0.01" max="999.99" step="0.01" />
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <span asp-validation-for="PorcentajeMargenVenta" class="text-danger"></span>
                         </div>
                         <div class="col-12">
                             <label asp-for="IdProducto" class="form-label"></label>
-                            <select asp-for="IdProducto" asp-items="ViewBag.Productos" class="form-select">
+                            <select asp-for="IdProducto" asp-items="ViewBag.Productos" class="form-select" id="IdProducto">
                                 <option value="">Selecciona un producto</option>
                             </select>
                             <span asp-validation-for="IdProducto" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="PrecioVentaSugerido" class="form-label"></label>
+                            <div class="input-group">
+                                <input asp-for="PrecioVentaSugerido" class="form-control" id="PrecioVentaSugerido" min="0.01" step="0.01" />
+                                <button type="button" class="btn btn-outline-secondary" id="btnRestaurarSugerido" title="Recalcular segun compra y margen">Recalcular</button>
+                            </div>
+                            <span asp-validation-for="PrecioVentaSugerido" class="text-danger"></span>
+                            <div class="form-text" id="formulaPrecioVenta">
+                                Sugerido = precio compra + (precio compra × margen / 100)
+                            </div>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <div class="form-check mb-2">
+                                <input asp-for="AplicarPrecioAlProducto" class="form-check-input" id="AplicarPrecioAlProducto" />
+                                <label asp-for="AplicarPrecioAlProducto" class="form-check-label"></label>
+                                <div class="form-text">Marca esta opcion para actualizar el precio de venta del producto al guardar.</div>
+                            </div>
                         </div>
                     </div>
 
@@ -81,14 +107,49 @@
 
             const selProd = document.getElementById('IdProducto');
             const selProv = document.getElementById('IdProveedor');
-            if (typeof TomSelect === 'undefined') return;
+            if (typeof TomSelect !== 'undefined') {
+                if (selProd) new TomSelect(selProd, { ...opts, placeholder: 'Buscar producto...' });
+                if (selProv) new TomSelect(selProv, { ...opts, placeholder: 'Buscar proveedor...' });
+            }
 
-            if (selProd) {
-                new TomSelect(selProd, { ...opts, placeholder: 'Buscar producto...' });
-            }
-            if (selProv) {
-                new TomSelect(selProv, { ...opts, placeholder: 'Buscar proveedor...' });
-            }
+            const precioCompra = document.getElementById('PrecioUnitarioCompra');
+            const margen = document.getElementById('PorcentajeMargenVenta');
+            const precioVenta = document.getElementById('PrecioVentaSugerido');
+            const btnRestaurar = document.getElementById('btnRestaurarSugerido');
+            let precioVentaEditadoManual = false;
+
+            const calcularSugerido = () => {
+                const compra = parseFloat(precioCompra?.value ?? '');
+                const pct = parseFloat(margen?.value ?? '');
+                if (!Number.isFinite(compra) || compra <= 0 || !Number.isFinite(pct) || pct <= 0) {
+                    return null;
+                }
+                return Math.round((compra + compra * pct / 100) * 100) / 100;
+            };
+
+            const actualizarPrecioVentaSugerido = (forzar = false) => {
+                if (!precioVenta) return;
+                if (precioVentaEditadoManual && !forzar) return;
+                const sugerido = calcularSugerido();
+                precioVenta.value = sugerido !== null ? sugerido.toFixed(2) : '';
+            };
+
+            precioCompra?.addEventListener('input', () => actualizarPrecioVentaSugerido());
+            margen?.addEventListener('input', () => actualizarPrecioVentaSugerido());
+            precioVenta?.addEventListener('input', () => { precioVentaEditadoManual = true; });
+            btnRestaurar?.addEventListener('click', () => {
+                precioVentaEditadoManual = false;
+                actualizarPrecioVentaSugerido(true);
+            });
+
+            actualizarPrecioVentaSugerido(true);
+
+            const aplicarCheck = document.getElementById('AplicarPrecioAlProducto');
+            aplicarCheck?.addEventListener('change', () => {
+                if (aplicarCheck.checked && !precioVenta?.value) {
+                    actualizarPrecioVentaSugerido(true);
+                }
+            });
 
             $(function () {
                 const fixIgnore = () => {

@@ -108,6 +108,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                 .HasColumnName("idProveedor");
             entity.Property(m => m.PrecioUnitarioCompra)
                 .HasColumnName("precioUnitarioCompra");
+            entity.Property(m => m.PorcentajeMargenVenta)
+                .HasColumnName("porcentajeMargenVenta");
+            entity.Property(m => m.PrecioVentaSugerido)
+                .HasColumnName("precioVentaSugerido");
 
             entity.HasOne(m => m.Proveedor)
                 .WithMany(p => p.MovimientosStock)

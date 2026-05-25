@@ -60,14 +60,25 @@ public class InventarioController(AppDbContext context, InventarioStockService i
 
         try
         {
-            await inventarioStock.RegistrarMovimientoAsync(
+            EntradaInventarioResultado resultado = await inventarioStock.RegistrarEntradaInventarioAsync(
                 model.Fecha,
                 model.IdProducto,
                 model.Cantidad,
                 model.StockMinimo,
                 model.IdProveedor,
-                model.PrecioUnitarioCompra);
+                model.PrecioUnitarioCompra,
+                model.PorcentajeMargenVenta,
+                model.PrecioVentaSugerido,
+                model.AplicarPrecioAlProducto);
+
             TempData["Success"] = "Entrada de inventario registrada correctamente.";
+            if (resultado.PrecioProductoActualizado && resultado.NuevoPrecioProducto.HasValue)
+            {
+                string nombre = resultado.NombreProducto ?? "el producto";
+                TempData["PrecioProductoActualizado"] =
+                    $"El precio de venta de {nombre} fue actualizado a {resultado.NuevoPrecioProducto.Value:C0} (COP).";
+            }
+
             return RedirectToAction(nameof(Index));
         }
         catch (Exception ex)

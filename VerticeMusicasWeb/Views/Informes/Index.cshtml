@@ -26,6 +26,13 @@
         </div>
     </header>
 
+    <div class="informes-print-meta only-print">
+        <strong>Vertice Muisca — Informes</strong>
+        <span id="informesPrintSeccionTitulo">Ventas — listado</span>
+        <span>Generado: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</span>
+        <span>Periodo: @(Model.Desde.HasValue && Model.Hasta.HasValue ? $"{Model.Desde:dd/MM/yyyy} — {Model.Hasta:dd/MM/yyyy}" : Model.Desde.HasValue ? $"Desde {Model.Desde:dd/MM/yyyy}" : Model.Hasta.HasValue ? $"Hasta {Model.Hasta:dd/MM/yyyy}" : "Todo el historial")</span>
+    </div>
+
     <div class="card card-modern informes-toolbar">
         <button class="informes-toolbar-toggle @(filtrosActivos > 0 ? "" : "collapsed")" type="button" data-bs-toggle="collapse" data-bs-target="#informesFiltros" aria-expanded="@(filtrosActivos > 0 ? "true" : "false")">
             <span>Filtros y periodo</span>
@@ -114,32 +121,59 @@
                 <div class="informes-tab-group">
                     <label>Ventas</label>
                     <ul class="nav">
-                        <li><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-ventas" type="button">Listado</button></li>
-                        <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-top" type="button">Mas vendidos</button></li>
-                        <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-salidas" type="button">Salidas</button></li>
+                        <li><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-ventas" data-seccion="ventas" type="button">Listado</button></li>
+                        <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-top" data-seccion="mas-vendidos" type="button">Mas vendidos</button></li>
+                        <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-salidas" data-seccion="salidas" type="button">Salidas</button></li>
                     </ul>
                 </div>
                 <div class="informes-tab-group">
                     <label>Compras</label>
                     <ul class="nav">
-                        <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-entradas" type="button">Entradas</button></li>
-                        <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-compras-prov" type="button">Por proveedor</button></li>
-                        <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-comparacion" type="button">Comparar precios</button></li>
-                        <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-proveedores" type="button">Resumen prov.</button></li>
+                        <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-entradas" data-seccion="entradas" type="button">Entradas</button></li>
+                        <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-compras-prov" data-seccion="compras-proveedor" type="button">Por proveedor</button></li>
+                        <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-comparacion" data-seccion="comparacion" type="button">Comparar precios</button></li>
+                        <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-proveedores" data-seccion="proveedores" type="button">Resumen prov.</button></li>
                     </ul>
                 </div>
                 <div class="informes-tab-group">
                     <label>Catalogo</label>
                     <ul class="nav">
-                        <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-productos" type="button">Productos</button></li>
-                        <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-categorias" type="button">Categorias</button></li>
+                        <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-productos" data-seccion="productos" type="button">Productos</button></li>
+                        <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-categorias" data-seccion="categorias" type="button">Categorias</button></li>
                     </ul>
                 </div>
             </div>
         </div>
 
-        <div class="tab-content informes-panel-body">
-            <div class="tab-pane fade show active" id="tab-ventas">
+        <div class="informes-panel-export no-print">
+            <div class="informes-panel-export-label">
+                <small class="text-muted">Seccion visible</small>
+                <strong id="informesSeccionActivaLabel">Ventas — listado</strong>
+            </div>
+            <div class="informes-panel-export-btns">
+                <button type="button" class="btn btn-sm btn-modern-secondary" id="btnImprimirSeccion" title="Imprimir solo esta seccion">
+                    Imprimir
+                </button>
+                <button type="button" class="btn btn-sm btn-modern-primary" id="btnExportarPdfSeccion" title="Descargar PDF de esta seccion">
+                    Exportar PDF
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="btnExportarPdfCompleto" title="PDF con todas las secciones">
+                    PDF completo
+                </button>
+            </div>
+            <form id="formExportPdf" method="get" asp-action="ExportPdf" class="d-none" aria-hidden="true">
+                <input type="hidden" name="desde" id="pdfDesde" value="@(Model.Desde?.ToString("yyyy-MM-dd"))" />
+                <input type="hidden" name="hasta" id="pdfHasta" value="@(Model.Hasta?.ToString("yyyy-MM-dd"))" />
+                <input type="hidden" name="idProductoComparar" id="pdfIdProductoComparar" value="@Model.IdProductoComparar" />
+                <input type="hidden" name="idProveedor" id="pdfIdProveedor" value="@Model.IdProveedor" />
+                <input type="hidden" name="idCategoria" id="pdfIdCategoria" value="@Model.IdCategoria" />
+                <input type="hidden" name="q" id="pdfQ" value="@Model.TerminoBusqueda" />
+                <input type="hidden" name="seccion" id="pdfSeccion" value="ventas" />
+            </form>
+        </div>
+
+        <div class="tab-content informes-panel-body" id="informesTabContent">
+            <div class="tab-pane fade show active informes-print-section" id="tab-ventas" data-seccion="ventas" data-print-title="Ventas — listado">
                 @if (Model.Ventas.Count == 0)
                 {
                     <div class="informes-empty"><div class="icon">📋</div><p>No hay ventas en el periodo seleccionado.</p></div>
@@ -167,7 +201,7 @@
                 }
             </div>
 
-            <div class="tab-pane fade" id="tab-entradas">
+            <div class="tab-pane fade informes-print-section" id="tab-entradas" data-seccion="entradas" data-print-title="Entradas de inventario">
                 @if (Model.EntradasInventario.Count == 0)
                 {
                     <div class="informes-empty"><div class="icon">📦</div><p>No hay entradas de inventario en el periodo.</p></div>
@@ -196,7 +230,7 @@
                 }
             </div>
 
-            <div class="tab-pane fade" id="tab-compras-prov">
+            <div class="tab-pane fade informes-print-section" id="tab-compras-prov" data-seccion="compras-proveedor" data-print-title="Compras por proveedor">
                 @if (Model.ComprasPorProveedor.Count == 0)
                 {
                     <div class="informes-empty"><div class="icon">🛒</div><p>No hay compras con precio registrado.</p></div>
@@ -224,7 +258,7 @@
                 }
             </div>
 
-            <div class="tab-pane fade" id="tab-comparacion">
+            <div class="tab-pane fade informes-print-section" id="tab-comparacion" data-seccion="comparacion" data-print-title="Comparacion de precios">
                 @if (Model.ComparacionPreciosProveedores.Count == 0)
                 {
                     <div class="informes-empty">
@@ -275,7 +309,7 @@
                 }
             </div>
 
-            <div class="tab-pane fade" id="tab-proveedores">
+            <div class="tab-pane fade informes-print-section" id="tab-proveedores" data-seccion="proveedores" data-print-title="Resumen de proveedores">
                 @if (Model.Proveedores.Count == 0)
                 {
                     <div class="informes-empty"><div class="icon">🏢</div><p>No hay proveedores registrados.</p></div>
@@ -303,7 +337,7 @@
                 }
             </div>
 
-            <div class="tab-pane fade" id="tab-productos">
+            <div class="tab-pane fade informes-print-section" id="tab-productos" data-seccion="productos" data-print-title="Catalogo de productos">
                 <div class="table-responsive">
                     <table class="table table-modern table-hover mb-0">
                         <thead><tr><th>Producto</th><th>Codigo</th><th>Categoria</th><th>Marca</th><th class="text-end">P. venta</th><th class="text-end">Stock</th><th>Mejor prov.</th><th class="text-end">Mejor compra</th></tr></thead>
@@ -326,7 +360,7 @@
                 </div>
             </div>
 
-            <div class="tab-pane fade" id="tab-categorias">
+            <div class="tab-pane fade informes-print-section" id="tab-categorias" data-seccion="categorias" data-print-title="Categorias">
                 <div class="table-responsive">
                     <table class="table table-modern table-hover mb-0">
                         <thead><tr><th>Categoria</th><th class="text-end">Productos</th><th class="text-end">Stock total</th></tr></thead>
@@ -340,7 +374,7 @@
                 </div>
             </div>
 
-            <div class="tab-pane fade" id="tab-salidas">
+            <div class="tab-pane fade informes-print-section" id="tab-salidas" data-seccion="salidas" data-print-title="Salidas de inventario">
                 @if (Model.SalidasInventario.Count == 0)
                 {
                     <div class="informes-empty"><div class="icon">📤</div><p>No hay salidas en el periodo.</p></div>
@@ -367,7 +401,7 @@
                 }
             </div>
 
-            <div class="tab-pane fade" id="tab-top">
+            <div class="tab-pane fade informes-print-section" id="tab-top" data-seccion="mas-vendidos" data-print-title="Productos mas vendidos">
                 @if (Model.ProductosMasVendidos.Count == 0)
                 {
                     <div class="informes-empty"><div class="icon">🏆</div><p>No hay ventas en el periodo para este ranking.</p></div>
@@ -402,43 +436,174 @@
 @section Scripts {
     <script>
         (() => {
-            const form = document.getElementById('form-informes');
+            const formFiltros = document.getElementById('form-informes');
             const desde = document.getElementById('filtroDesde');
             const hasta = document.getElementById('filtroHasta');
-            if (!form || !desde || !hasta) return;
 
-            const fmt = d => d.toISOString().slice(0, 10);
+            const labelSeccion = document.getElementById('informesSeccionActivaLabel');
+            const printTitulo = document.getElementById('informesPrintSeccionTitulo');
+            const btnPrint = document.getElementById('btnImprimirSeccion');
+            const btnPdf = document.getElementById('btnExportarPdfSeccion');
+            const btnPdfCompleto = document.getElementById('btnExportarPdfCompleto');
+            const formPdf = document.getElementById('formExportPdf');
+            const pdfSeccion = document.getElementById('pdfSeccion');
+            const tabContent = document.getElementById('informesTabContent');
+            const navLinks = () => document.querySelectorAll('.informes-panel [data-bs-toggle="tab"][data-seccion]');
 
-            document.querySelectorAll('[data-range]').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const hoy = new Date();
-                    const range = btn.getAttribute('data-range');
-                    let d1 = null, d2 = null;
+            let seccionActiva = 'ventas';
+            let tituloActivo = 'Ventas — listado';
 
-                    if (range === 'hoy') {
-                        d1 = d2 = hoy;
-                    } else if (range === '7d') {
-                        d2 = hoy;
-                        d1 = new Date(hoy);
-                        d1.setDate(d1.getDate() - 6);
-                    } else if (range === 'mes') {
-                        d1 = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-                        d2 = hoy;
-                    } else {
-                        desde.value = '';
-                        hasta.value = '';
-                        form.submit();
-                        return;
-                    }
+            const panelPorSeccion = (seccion) =>
+                tabContent?.querySelector(`.tab-pane[data-seccion="${seccion}"]`) ?? null;
 
-                    desde.value = fmt(d1);
-                    hasta.value = fmt(d2);
-                    document.querySelectorAll('[data-range]').forEach(c => c.classList.remove('active'));
-                    btn.classList.add('active');
-                    form.submit();
+            const activarSeccion = (btn) => {
+                const seccion = btn?.dataset?.seccion;
+                if (!seccion) return;
+
+                seccionActiva = seccion;
+                const panel = panelPorSeccion(seccion);
+                tituloActivo = panel?.dataset.printTitle || 'Informe';
+
+                navLinks().forEach(link => link.classList.remove('active'));
+                btn.classList.add('active');
+
+                tabContent?.querySelectorAll('.tab-pane').forEach(pane => {
+                    pane.classList.remove('show', 'active');
+                });
+                if (panel) {
+                    panel.classList.add('show', 'active');
+                }
+            };
+
+            const obtenerSeccionActiva = () => ({
+                seccion: seccionActiva,
+                titulo: tituloActivo
+            });
+
+            const obtenerPanelActivo = () => panelPorSeccion(seccionActiva);
+
+            const sincronizarFiltrosPdf = () => {
+                if (!formPdf) return;
+                const set = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = val ?? '';
+                };
+                set('pdfDesde', desde?.value);
+                set('pdfHasta', hasta?.value);
+                const prov = document.querySelector('[name="idProveedor"]');
+                const cat = document.querySelector('[name="idCategoria"]');
+                const prod = document.querySelector('[name="idProductoComparar"]');
+                const q = document.querySelector('[name="q"]');
+                set('pdfIdProveedor', prov?.value);
+                set('pdfIdCategoria', cat?.value);
+                set('pdfIdProductoComparar', prod?.value);
+                set('pdfQ', q?.value);
+            };
+
+            const actualizarExportacionSeccion = () => {
+                const { seccion, titulo } = obtenerSeccionActiva();
+                if (labelSeccion) labelSeccion.textContent = titulo || 'Informe';
+                if (printTitulo) printTitulo.textContent = titulo || 'Informe';
+                if (pdfSeccion) pdfSeccion.value = seccion;
+                sincronizarFiltrosPdf();
+            };
+
+            const enviarPdf = (seccion) => {
+                if (!formPdf || !pdfSeccion) return;
+                sincronizarFiltrosPdf();
+                pdfSeccion.value = seccion;
+                formPdf.submit();
+            };
+
+            navLinks().forEach(btn => {
+                btn.addEventListener('shown.bs.tab', (e) => {
+                    activarSeccion(e.target);
+                    actualizarExportacionSeccion();
+                });
+                btn.addEventListener('click', (e) => {
+                    activarSeccion(e.currentTarget);
+                    actualizarExportacionSeccion();
                 });
             });
 
+            const inicial = document.querySelector('.informes-panel .nav-link.active[data-seccion]')
+                || navLinks()[0];
+            if (inicial) activarSeccion(inicial);
+            actualizarExportacionSeccion();
+
+            btnPdf?.addEventListener('click', () => {
+                const { seccion } = obtenerSeccionActiva();
+                enviarPdf(seccion);
+            });
+
+            btnPdfCompleto?.addEventListener('click', () => enviarPdf('completo'));
+
+            btnPrint?.addEventListener('click', () => {
+                activarSeccion(
+                    document.querySelector(`.informes-panel .nav-link[data-seccion="${seccionActiva}"]`)
+                    || navLinks()[0]);
+                const panel = obtenerPanelActivo();
+                const panes = document.querySelectorAll('.informes-print-section');
+                const estilosGuardados = [];
+
+                panes.forEach(p => {
+                    estilosGuardados.push({ el: p, display: p.style.display });
+                    p.classList.remove('informes-print-active');
+                    p.style.display = 'none';
+                });
+
+                if (panel) {
+                    panel.classList.add('informes-print-active');
+                    panel.style.display = 'block';
+                }
+
+                document.body.classList.add('informes-printing-one');
+
+                const cleanup = () => {
+                    document.body.classList.remove('informes-printing-one');
+                    estilosGuardados.forEach(({ el, display }) => {
+                        el.style.display = display;
+                        el.classList.remove('informes-print-active');
+                    });
+                };
+
+                window.addEventListener('afterprint', cleanup, { once: true });
+                window.print();
+                setTimeout(cleanup, 1500);
+            });
+
+            if (formFiltros && desde && hasta) {
+                const fmt = d => d.toISOString().slice(0, 10);
+                document.querySelectorAll('[data-range]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const hoy = new Date();
+                        const range = btn.getAttribute('data-range');
+                        let d1 = null, d2 = null;
+
+                        if (range === 'hoy') {
+                            d1 = d2 = hoy;
+                        } else if (range === '7d') {
+                            d2 = hoy;
+                            d1 = new Date(hoy);
+                            d1.setDate(d1.getDate() - 6);
+                        } else if (range === 'mes') {
+                            d1 = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+                            d2 = hoy;
+                        } else {
+                            desde.value = '';
+                            hasta.value = '';
+                            formFiltros.submit();
+                            return;
+                        }
+
+                        desde.value = fmt(d1);
+                        hasta.value = fmt(d2);
+                        document.querySelectorAll('[data-range]').forEach(c => c.classList.remove('active'));
+                        btn.classList.add('active');
+                        formFiltros.submit();
+                    });
+                });
+            }
         })();
     </script>
 }

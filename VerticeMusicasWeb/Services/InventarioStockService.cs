@@ -10,9 +10,16 @@ public class InventarioStockService(AppDbContext db)
     private static string FechaToTexto(DateTime fecha) =>
         fecha.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
+    /// <summary>precioCompra + (precioCompra * porcentajeMargen / 100)</summary>
+    public static decimal CalcularPrecioVentaSugerido(decimal precioCompra, decimal porcentajeMargen) =>
+        Math.Round(
+            precioCompra + precioCompra * porcentajeMargen / 100m,
+            2,
+            MidpointRounding.AwayFromZero);
+
     public async Task<int> RegistrarMovimientoAsync(DateTime fecha, int idProducto, int cantidad, CancellationToken ct = default)
     {
-        return await RegistrarMovimientoAsync(fecha, idProducto, cantidad, 0, null, null, ct);
+        return await RegistrarMovimientoAsync(fecha, idProducto, cantidad, 0, null, null, null, null, false, ct);
     }
 
     public async Task<int> RegistrarMovimientoAsync(
@@ -21,7 +28,7 @@ public class InventarioStockService(AppDbContext db)
         int cantidad,
         int stockMinimo,
         CancellationToken ct) =>
-        await RegistrarMovimientoAsync(fecha, idProducto, cantidad, stockMinimo, null, null, ct);
+        await RegistrarMovimientoAsync(fecha, idProducto, cantidad, stockMinimo, null, null, null, null, false, ct);
 
     public async Task<int> RegistrarMovimientoAsync(
         DateTime fecha,
@@ -30,6 +37,56 @@ public class InventarioStockService(AppDbContext db)
         int stockMinimo,
         int? idProveedor = null,
         decimal? precioUnitarioCompra = null,
+        CancellationToken ct = default) =>
+        await RegistrarMovimientoAsync(
+            fecha, idProducto, cantidad, stockMinimo, idProveedor, precioUnitarioCompra, null, null, false, ct);
+
+    public async Task<EntradaInventarioResultado> RegistrarEntradaInventarioAsync(
+        DateTime fecha,
+        int idProducto,
+        int cantidad,
+        int stockMinimo,
+        int idProveedor,
+        decimal precioUnitarioCompra,
+        decimal porcentajeMargenVenta,
+        decimal precioVentaSugerido,
+        bool aplicarPrecioAlProducto,
+        CancellationToken ct = default)
+    {
+        int idInventario = await RegistrarMovimientoAsync(
+            fecha,
+            idProducto,
+            cantidad,
+            stockMinimo,
+            idProveedor,
+            precioUnitarioCompra,
+            porcentajeMargenVenta,
+            precioVentaSugerido,
+            aplicarPrecioAlProducto,
+            ct);
+
+        Producto? producto = await db.Productos.AsNoTracking()
+            .FirstOrDefaultAsync(p => p.IdProducto == idProducto, ct);
+
+        return new EntradaInventarioResultado
+        {
+            IdInventario = idInventario,
+            PrecioProductoActualizado = aplicarPrecioAlProducto,
+            NuevoPrecioProducto = aplicarPrecioAlProducto ? precioVentaSugerido : null,
+            NombreProducto = producto?.Nombre
+        };
+    }
+
+    public async Task<int> RegistrarMovimientoAsync(
+        DateTime fecha,
+        int idProducto,
+        int cantidad,
+        int stockMinimo,
+        int? idProveedor,
+        decimal? precioUnitarioCompra,
+        decimal? porcentajeMargenVenta,
+        decimal? precioVentaSugerido,
+        bool aplicarPrecioAlProducto = false,
         CancellationToken ct = default)
     {
         if (cantidad == 0)
@@ -52,6 +109,16 @@ public class InventarioStockService(AppDbContext db)
             if (!precioUnitarioCompra.HasValue || precioUnitarioCompra.Value <= 0)
             {
                 throw new InvalidOperationException("El precio de compra debe ser mayor a cero.");
+            }
+
+            if (!porcentajeMargenVenta.HasValue || porcentajeMargenVenta.Value <= 0)
+            {
+                throw new InvalidOperationException("El porcentaje de margen de venta debe ser mayor a cero.");
+            }
+
+            if (!precioVentaSugerido.HasValue || precioVentaSugerido.Value <= 0)
+            {
+                throw new InvalidOperationException("El precio de venta sugerido debe ser mayor a cero.");
             }
 
             bool existeProveedor = await db.Proveedores.AnyAsync(p => p.IdProveedor == idProveedor.Value, ct);
@@ -82,8 +149,20 @@ public class InventarioStockService(AppDbContext db)
                 IdInventario = inv.IdInventario,
                 IdProducto = idProducto,
                 IdProveedor = cantidad > 0 ? idProveedor : null,
-                PrecioUnitarioCompra = cantidad > 0 ? precioUnitarioCompra : null
+                PrecioUnitarioCompra = cantidad > 0 ? precioUnitarioCompra : null,
+                PorcentajeMargenVenta = cantidad > 0 ? porcentajeMargenVenta : null,
+                PrecioVentaSugerido = cantidad > 0 ? precioVentaSugerido : null
             });
+
+            if (cantidad > 0 && aplicarPrecioAlProducto && precioVentaSugerido.HasValue)
+            {
+                Producto? producto = await db.Productos.FindAsync([idProducto], ct);
+                if (producto is not null)
+                {
+                    producto.Precio = precioVentaSugerido.Value;
+                }
+            }
+
             await db.SaveChangesAsync(ct);
             if (!usaTransaccionExistente && tx is not null)
             {
@@ -160,7 +239,9 @@ public class InventarioStockService(AppDbContext db)
                 NombreCategoria = x.c.NombreCategoria,
                 x.s.Cantidad,
                 NombreProveedor = x.pr != null ? x.pr.Nombre : null,
-                x.s.PrecioUnitarioCompra
+                x.s.PrecioUnitarioCompra,
+                x.s.PorcentajeMargenVenta,
+                x.s.PrecioVentaSugerido
             })
             .ToListAsync(ct);
 
@@ -176,7 +257,9 @@ public class InventarioStockService(AppDbContext db)
             NombreCategoria = x.NombreCategoria,
             Cantidad = x.Cantidad,
             NombreProveedor = x.NombreProveedor,
-            PrecioUnitarioCompra = x.PrecioUnitarioCompra
+            PrecioUnitarioCompra = x.PrecioUnitarioCompra,
+            PorcentajeMargenVenta = x.PorcentajeMargenVenta,
+            PrecioVentaSugerido = x.PrecioVentaSugerido
         });
     }
 

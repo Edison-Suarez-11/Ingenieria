@@ -11,5 +11,7 @@ public class InventarioMovimientoRow
     public int Cantidad { get; set; }
     public string? NombreProveedor { get; set; }
     public decimal? PrecioUnitarioCompra { get; set; }
+    public decimal? PorcentajeMargenVenta { get; set; }
+    public decimal? PrecioVentaSugerido { get; set; }
     public decimal? TotalCompra => PrecioUnitarioCompra.HasValue ? PrecioUnitarioCompra * Cantidad : null;
 }

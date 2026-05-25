@@ -27,6 +27,12 @@ public class MovimientoStock
     [Display(Name = "Precio unitario de compra")]
     public decimal? PrecioUnitarioCompra { get; set; }
 
+    [Display(Name = "Porcentaje de margen de venta")]
+    public decimal? PorcentajeMargenVenta { get; set; }
+
+    [Display(Name = "Precio de venta sugerido")]
+    public decimal? PrecioVentaSugerido { get; set; }
+
     [ForeignKey(nameof(IdInventario))]
     public Inventario? Inventario { get; set; }
 

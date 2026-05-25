@@ -7,7 +7,7 @@ using VerticeMusicasWeb.Services;
 
 namespace VerticeMusicasWeb.Controllers;
 
-public class InformesController(InformesService informes, AppDbContext context) : Controller
+public class InformesController(InformesService informes, InformesPdfService informesPdf, AppDbContext context) : Controller
 {
     public async Task<IActionResult> Index(
         DateTime? desde,
@@ -22,6 +22,25 @@ public class InformesController(InformesService informes, AppDbContext context) 
         await CargarFiltrosAsync(idProductoComparar, idProveedor, idCategoria);
         ViewBag.Term = q;
         return View(vm);
+    }
+
+    public async Task<IActionResult> ExportPdf(
+        DateTime? desde,
+        DateTime? hasta,
+        int? idProductoComparar,
+        int? idProveedor,
+        int? idCategoria,
+        string? q,
+        string? seccion)
+    {
+        string seccionNormalizada = InformesSeccion.Normalizar(seccion);
+
+        InformesViewModel vm = await informes.ObtenerInformesAsync(
+            desde, hasta, idProductoComparar, idProveedor, idCategoria, q);
+        byte[] pdf = informesPdf.GenerarPdf(vm, seccionNormalizada);
+        string slug = seccionNormalizada.Replace("-", "_");
+        string nombre = $"Informe_{slug}_{DateTime.Now:yyyyMMdd_HHmm}.pdf";
+        return File(pdf, "application/pdf", nombre);
     }
 
     private async Task CargarFiltrosAsync(int? productoSel, int? proveedorSel, int? categoriaSel)

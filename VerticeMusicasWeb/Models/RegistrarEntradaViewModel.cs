@@ -30,4 +30,17 @@ public class RegistrarEntradaViewModel
     [Range(0.01, double.MaxValue, ErrorMessage = "El precio de compra debe ser mayor a cero.")]
     [Display(Name = "Precio unitario de compra")]
     public decimal PrecioUnitarioCompra { get; set; }
+
+    [Required(ErrorMessage = "El porcentaje de margen es obligatorio.")]
+    [Range(0.01, 999.99, ErrorMessage = "El porcentaje de margen debe ser mayor a cero.")]
+    [Display(Name = "Porcentaje de margen de venta (%)")]
+    public decimal PorcentajeMargenVenta { get; set; } = 30;
+
+    [Required(ErrorMessage = "El precio de venta sugerido es obligatorio.")]
+    [Range(0.01, double.MaxValue, ErrorMessage = "El precio de venta sugerido debe ser mayor a cero.")]
+    [Display(Name = "Precio de venta sugerido")]
+    public decimal PrecioVentaSugerido { get; set; }
+
+    [Display(Name = "Aplicar este precio de venta al producto")]
+    public bool AplicarPrecioAlProducto { get; set; }
 }

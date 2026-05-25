@@ -50,6 +50,8 @@
                         <th>Categoria</th>
                         <th>Proveedor</th>
                         <th class="text-end">P. compra</th>
+                        <th class="text-end">Margen %</th>
+                        <th class="text-end">P. venta sug.</th>
                         <th class="text-end">Cantidad</th>
                     </tr>
                 </thead>
@@ -64,6 +66,8 @@
                         <td>@item.NombreCategoria</td>
                         <td>@(item.NombreProveedor ?? "—")</td>
                         <td class="text-end">@(item.PrecioUnitarioCompra?.ToString("C0", System.Globalization.CultureInfo.GetCultureInfo("es-CO")) ?? "—")</td>
+                        <td class="text-end">@(item.PorcentajeMargenVenta.HasValue ? item.PorcentajeMargenVenta.Value.ToString("N2") + " %" : "—")</td>
+                        <td class="text-end">@(item.PrecioVentaSugerido?.ToString("C0", System.Globalization.CultureInfo.GetCultureInfo("es-CO")) ?? "—")</td>
                         <td class="text-end">@item.Cantidad</td>
                     </tr>
                 }
