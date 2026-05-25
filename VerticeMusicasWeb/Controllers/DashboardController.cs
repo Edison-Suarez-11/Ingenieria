@@ -11,6 +11,7 @@ public class DashboardController(AppDbContext context, InventarioStockService in
     public async Task<IActionResult> Index()
     {
         ViewBag.CantidadCategorias = await context.Categorias.CountAsync();
+        ViewBag.CantidadProveedores = await context.Proveedores.CountAsync();
         ViewBag.CantidadProductos = await context.Productos.CountAsync();
         ViewBag.CantidadMovimientos = await context.MovimientosStock.CountAsync();
         ViewBag.CantidadVentas = await context.Ventas.CountAsync();

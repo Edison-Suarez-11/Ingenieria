@@ -1,0 +1,327 @@
+/* Proveedores — modulo limpio alineado al dashboard */
+.proveedores-page {
+  --prov-gap: 0.75rem;
+}
+
+.proveedores-hero {
+  background:
+    radial-gradient(700px 240px at 15% 20%, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 65%),
+    linear-gradient(135deg, #6366f1 0%, #14b8a6 55%, #00b36b 100%);
+  color: #fff;
+  border-radius: 20px;
+  padding: 1.5rem 1.75rem;
+  margin-bottom: var(--prov-gap);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.proveedores-hero h1 {
+  font-size: 1.65rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.proveedores-hero p {
+  margin: 0.35rem 0 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.92);
+  max-width: 28rem;
+}
+
+.proveedores-hero-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.proveedores-hero-actions .btn {
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 0.45rem 0.9rem;
+}
+
+.proveedores-hero-actions .btn-light {
+  background: rgba(255, 255, 255, 0.95);
+  color: #4338ca;
+  border: none;
+}
+
+.proveedores-hero-actions .btn-light:hover {
+  background: #fff;
+  color: #3730a3;
+}
+
+.proveedores-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-bottom: var(--prov-gap);
+}
+
+.proveedores-kpi {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0.65rem 0.85rem;
+  border-left: 3px solid #6366f1;
+  box-shadow: 0 4px 14px rgba(16, 24, 40, 0.04);
+}
+
+.proveedores-kpi small {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.proveedores-kpi strong {
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.proveedores-kpi.kpi-filtro { border-left-color: var(--teal); }
+.proveedores-kpi.kpi-inventario { border-left-color: var(--primary); }
+
+.proveedores-panel {
+  overflow: hidden;
+}
+
+.proveedores-panel-top {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  background: linear-gradient(180deg, #f8fcfa 0%, #fff 100%);
+  border-bottom: 1px solid var(--border);
+  align-items: start;
+}
+
+.proveedores-form-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.proveedores-form-card.is-editing {
+  border-color: rgba(99, 102, 241, 0.45);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+.proveedores-form-card .form-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0 0 0.65rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.proveedores-form-card .form-title .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+.proveedores-form-card.is-editing .form-title .dot {
+  background: #6366f1;
+}
+
+.proveedores-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 0.6rem 0.75rem;
+  align-items: end;
+}
+
+.proveedores-form-grid .lbl {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 0.2rem;
+}
+
+.proveedores-form-grid .form-control {
+  font-size: 0.875rem;
+  padding: 0.42rem 0.6rem;
+  border-radius: 8px;
+}
+
+.proveedores-form-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.proveedores-form-actions .btn {
+  font-size: 0.85rem;
+  padding: 0.42rem 0.75rem;
+  white-space: nowrap;
+}
+
+.proveedores-search {
+  min-width: 220px;
+}
+
+.proveedores-search .lbl {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 0.2rem;
+}
+
+.proveedores-search .search-row {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.proveedores-search .form-control {
+  font-size: 0.875rem;
+  padding: 0.42rem 0.6rem;
+  border-radius: 8px;
+  min-width: 140px;
+}
+
+.proveedores-search .btn {
+  font-size: 0.85rem;
+  padding: 0.42rem 0.65rem;
+}
+
+.proveedores-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.65rem 1.1rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.proveedores-list-header h5 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.proveedores-list-body {
+  padding: 0.5rem 1.1rem 1rem;
+}
+
+.proveedores-table {
+  font-size: 0.875rem;
+  margin-bottom: 0;
+}
+
+.proveedores-table thead th {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 700;
+  border: none;
+  padding: 0.5rem 0.65rem;
+  background: rgba(0, 179, 107, 0.08);
+}
+
+.proveedores-table tbody td {
+  padding: 0.65rem;
+  vertical-align: middle;
+  border-color: var(--border);
+}
+
+.proveedores-table tbody tr:hover {
+  background: rgba(0, 179, 107, 0.04);
+}
+
+.proveedores-table tbody tr.is-editing-row {
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.proveedores-cell-nombre {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.proveedores-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(0, 179, 107, 0.25));
+  color: #4338ca;
+  font-weight: 800;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.proveedores-cell-nombre .name {
+  font-weight: 600;
+}
+
+.proveedores-cell-nombre .id-tag {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.proveedores-contact {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.proveedores-empty {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--muted);
+}
+
+.proveedores-empty .icon {
+  font-size: 2rem;
+  opacity: 0.45;
+  margin-bottom: 0.5rem;
+}
+
+#proveedor-alert {
+  border-radius: 12px;
+  margin-bottom: var(--prov-gap);
+}
+
+@media (max-width: 992px) {
+  .proveedores-panel-top {
+    grid-template-columns: 1fr;
+  }
+  .proveedores-form-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .proveedores-form-actions {
+    grid-column: span 2;
+  }
+  .proveedores-search {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 576px) {
+  .proveedores-kpis {
+    grid-template-columns: 1fr;
+  }
+  .proveedores-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .proveedores-form-actions {
+    grid-column: span 1;
+  }
+}

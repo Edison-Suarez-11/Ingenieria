@@ -21,4 +21,13 @@ public class RegistrarEntradaViewModel
     [Range(0, int.MaxValue, ErrorMessage = "El stock minimo no puede ser negativo.")]
     [Display(Name = "Stock minimo")]
     public int StockMinimo { get; set; }
+
+    [Range(1, int.MaxValue, ErrorMessage = "Selecciona un proveedor.")]
+    [Display(Name = "Proveedor")]
+    public int IdProveedor { get; set; }
+
+    [Required(ErrorMessage = "El precio de compra es obligatorio.")]
+    [Range(0.01, double.MaxValue, ErrorMessage = "El precio de compra debe ser mayor a cero.")]
+    [Display(Name = "Precio unitario de compra")]
+    public decimal PrecioUnitarioCompra { get; set; }
 }

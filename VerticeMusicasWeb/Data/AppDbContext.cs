@@ -6,6 +6,7 @@ namespace VerticeMusicasWeb.Data;
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
     public DbSet<Categoria> Categorias => Set<Categoria>();
+    public DbSet<Proveedor> Proveedores => Set<Proveedor>();
     public DbSet<Producto> Productos => Set<Producto>();
     public DbSet<Inventario> Inventarios => Set<Inventario>();
     public DbSet<MovimientoStock> MovimientosStock => Set<MovimientoStock>();
@@ -24,6 +25,23 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.Property(c => c.NombreCategoria)
                 .HasColumnName("nombreCategoria")
                 .IsRequired();
+        });
+
+        modelBuilder.Entity<Proveedor>(entity =>
+        {
+            entity.ToTable("Proveedor");
+            entity.HasKey(p => p.IdProveedor);
+            entity.Property(p => p.IdProveedor)
+                .HasColumnName("idProveedor")
+                .ValueGeneratedOnAdd();
+            entity.Property(p => p.Nombre)
+                .HasColumnName("nombre")
+                .IsRequired();
+            entity.Property(p => p.Contacto)
+                .HasColumnName("contacto")
+                .IsRequired();
+
+            entity.HasIndex(p => p.Nombre).IsUnique();
         });
 
         modelBuilder.Entity<Producto>(entity =>
@@ -86,6 +104,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                 .HasColumnName("idInventario");
             entity.Property(m => m.IdProducto)
                 .HasColumnName("idProducto");
+            entity.Property(m => m.IdProveedor)
+                .HasColumnName("idProveedor");
+            entity.Property(m => m.PrecioUnitarioCompra)
+                .HasColumnName("precioUnitarioCompra");
+
+            entity.HasOne(m => m.Proveedor)
+                .WithMany(p => p.MovimientosStock)
+                .HasForeignKey(m => m.IdProveedor)
+                .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasOne(m => m.Inventario)
                 .WithMany(i => i.Movimientos)

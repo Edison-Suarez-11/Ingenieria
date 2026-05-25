@@ -21,9 +21,18 @@ public class MovimientoStock
     [Display(Name = "Producto")]
     public int IdProducto { get; set; }
 
+    [Display(Name = "Proveedor")]
+    public int? IdProveedor { get; set; }
+
+    [Display(Name = "Precio unitario de compra")]
+    public decimal? PrecioUnitarioCompra { get; set; }
+
     [ForeignKey(nameof(IdInventario))]
     public Inventario? Inventario { get; set; }
 
     [ForeignKey(nameof(IdProducto))]
     public Producto? Producto { get; set; }
+
+    [ForeignKey(nameof(IdProveedor))]
+    public Proveedor? Proveedor { get; set; }
 }

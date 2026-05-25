@@ -6,12 +6,17 @@ var builder = WebApplication.CreateBuilder(args);
 string dbPath = ResolveDatabasePath(builder.Environment.ContentRootPath);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+var mvcBuilder = builder.Services.AddControllersWithViews();
+if (builder.Environment.IsDevelopment())
+{
+    mvcBuilder.AddRazorRuntimeCompilation();
+}
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite($"Data Source={dbPath}"));
 builder.Services.AddScoped<InventarioStockService>();
 builder.Services.AddScoped<VentaService>();
 builder.Services.AddScoped<InformesService>();
+builder.Services.AddScoped<ProveedorService>();
 
 var app = builder.Build();
 

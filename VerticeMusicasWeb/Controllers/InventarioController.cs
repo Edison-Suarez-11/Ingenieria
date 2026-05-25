@@ -9,10 +9,11 @@ namespace VerticeMusicasWeb.Controllers;
 
 public class InventarioController(AppDbContext context, InventarioStockService inventarioStock) : Controller
 {
-    public async Task<IActionResult> Index(int? categoriaId, string? q)
+    public async Task<IActionResult> Index(int? categoriaId, int? proveedorId, string? q)
     {
         await CargarCategoriasFiltroAsync(categoriaId);
-        List<InventarioMovimientoRow> movimientos = await inventarioStock.GetMovimientosAsync(categoriaId, q);
+        await CargarProveedoresFiltroAsync(proveedorId);
+        List<InventarioMovimientoRow> movimientos = await inventarioStock.GetMovimientosAsync(categoriaId, q, proveedorId);
         ViewBag.Term = q;
         return View(movimientos);
     }
@@ -25,7 +26,14 @@ public class InventarioController(AppDbContext context, InventarioStockService i
             return RedirectToAction(nameof(Index));
         }
 
+        if (!await context.Proveedores.AnyAsync())
+        {
+            TempData["Error"] = "Registra al menos un proveedor antes de registrar entradas de inventario.";
+            return RedirectToAction("Index", "Proveedores");
+        }
+
         await CargarProductosSelectAsync();
+        await CargarProveedoresSelectAsync();
         return View(new RegistrarEntradaViewModel());
     }
 
@@ -38,15 +46,27 @@ public class InventarioController(AppDbContext context, InventarioStockService i
             ModelState.AddModelError(nameof(model.IdProducto), "El producto seleccionado no es valido.");
         }
 
+        if (!await context.Proveedores.AnyAsync(p => p.IdProveedor == model.IdProveedor))
+        {
+            ModelState.AddModelError(nameof(model.IdProveedor), "El proveedor seleccionado no es valido.");
+        }
+
         if (!ModelState.IsValid)
         {
             await CargarProductosSelectAsync(model.IdProducto);
+            await CargarProveedoresSelectAsync(model.IdProveedor);
             return View(model);
         }
 
         try
         {
-            await inventarioStock.RegistrarMovimientoAsync(model.Fecha, model.IdProducto, model.Cantidad, model.StockMinimo);
+            await inventarioStock.RegistrarMovimientoAsync(
+                model.Fecha,
+                model.IdProducto,
+                model.Cantidad,
+                model.StockMinimo,
+                model.IdProveedor,
+                model.PrecioUnitarioCompra);
             TempData["Success"] = "Entrada de inventario registrada correctamente.";
             return RedirectToAction(nameof(Index));
         }
@@ -54,6 +74,7 @@ public class InventarioController(AppDbContext context, InventarioStockService i
         {
             TempData["Error"] = $"No se pudo registrar el movimiento: {ex.Message}";
             await CargarProductosSelectAsync(model.IdProducto);
+            await CargarProveedoresSelectAsync(model.IdProveedor);
             return View(model);
         }
     }
@@ -66,6 +87,35 @@ public class InventarioController(AppDbContext context, InventarioStockService i
             .Select(p => new { p.IdProducto, Texto = p.Nombre + " — " + p.CodigoBarras })
             .ToListAsync();
         ViewBag.Productos = new SelectList(items, "IdProducto", "Texto", seleccionado);
+    }
+
+    private async Task CargarProveedoresSelectAsync(int? seleccionado = null)
+    {
+        var items = await context.Proveedores
+            .AsNoTracking()
+            .OrderBy(p => p.Nombre)
+            .Select(p => new { p.IdProveedor, Texto = p.Nombre + " — " + p.Contacto })
+            .ToListAsync();
+        ViewBag.Proveedores = new SelectList(items, "IdProveedor", "Texto", seleccionado);
+    }
+
+    private async Task CargarProveedoresFiltroAsync(int? seleccionado)
+    {
+        List<Proveedor> proveedores = await context.Proveedores.AsNoTracking().OrderBy(p => p.Nombre).ToListAsync();
+        var items = new List<SelectListItem>
+        {
+            new() { Value = "", Text = "Todos los proveedores", Selected = !seleccionado.HasValue }
+        };
+        foreach (Proveedor p in proveedores)
+        {
+            items.Add(new SelectListItem
+            {
+                Value = p.IdProveedor.ToString(),
+                Text = p.Nombre,
+                Selected = seleccionado == p.IdProveedor
+            });
+        }
+        ViewBag.ProveedoresFiltro = items;
     }
 
     private async Task CargarCategoriasFiltroAsync(int? seleccionada)

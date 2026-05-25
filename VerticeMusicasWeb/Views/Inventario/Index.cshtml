@@ -13,11 +13,15 @@
 
 <form method="get" class="card card-modern mb-3">
     <div class="card-body row g-2 align-items-end">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <label class="form-label mb-0 small text-muted">Categoria</label>
             <select name="categoriaId" asp-items="ViewBag.CategoriasFiltro" class="form-select"></select>
         </div>
-        <div class="col-md-5">
+        <div class="col-md-3">
+            <label class="form-label mb-0 small text-muted">Proveedor</label>
+            <select name="proveedorId" asp-items="ViewBag.ProveedoresFiltro" class="form-select"></select>
+        </div>
+        <div class="col-md-4">
             <label class="form-label mb-0 small text-muted">Buscar (nombre o codigo)</label>
             <input type="text" name="q" value="@ViewBag.Term" class="form-control" placeholder="Ej: leche o 7701..." />
         </div>
@@ -44,6 +48,8 @@
                         <th>Producto</th>
                         <th>Codigo</th>
                         <th>Categoria</th>
+                        <th>Proveedor</th>
+                        <th class="text-end">P. compra</th>
                         <th class="text-end">Cantidad</th>
                     </tr>
                 </thead>
@@ -56,6 +62,8 @@
                         <td>@item.NombreProducto</td>
                         <td>@item.CodigoBarras</td>
                         <td>@item.NombreCategoria</td>
+                        <td>@(item.NombreProveedor ?? "—")</td>
+                        <td class="text-end">@(item.PrecioUnitarioCompra?.ToString("C0", System.Globalization.CultureInfo.GetCultureInfo("es-CO")) ?? "—")</td>
                         <td class="text-end">@item.Cantidad</td>
                     </tr>
                 }

@@ -1,223 +1,444 @@
 @model VerticeMusicasWeb.Models.InformesViewModel
 @{
     ViewData["Title"] = "Informes";
-    string fmtFecha(DateTime f) => f == DateTime.MinValue ? "-" : f.ToString("dd/MM/yyyy HH:mm");
-    string fmtMoney(decimal m) => m.ToString("C0", System.Globalization.CultureInfo.GetCultureInfo("es-CO"));
+    var cultura = System.Globalization.CultureInfo.GetCultureInfo("es-CO");
+    string fmtFecha(DateTime f) => f == DateTime.MinValue ? "-" : f.ToString("dd/MM/yyyy");
+    string fmtMoney(decimal m) => m.ToString("C0", cultura);
+
+    int filtrosActivos = 0;
+    if (Model.Desde.HasValue) filtrosActivos++;
+    if (Model.Hasta.HasValue) filtrosActivos++;
+    if (Model.IdProveedor.HasValue) filtrosActivos++;
+    if (Model.IdCategoria.HasValue) filtrosActivos++;
+    if (!string.IsNullOrWhiteSpace(Model.TerminoBusqueda)) filtrosActivos++;
+    if (Model.IdProductoComparar.HasValue) filtrosActivos++;
 }
 
-<div class="mb-4">
-    <h2 class="mb-0">Informes</h2>
-    <small class="text-muted">Ventas, entradas de inventario, salidas y productos mas vendidos.</small>
-</div>
+@section Styles {
+    <link rel="stylesheet" href="~/css/informes.css" asp-append-version="true" />
+}
 
-<div class="card card-modern mb-4">
-    <div class="card-body">
-        <form method="get" class="row g-3 align-items-end">
-            <div class="col-md-4">
-                <label class="form-label">Desde</label>
-                <input type="date" name="desde" class="form-control" value="@(Model.Desde?.ToString("yyyy-MM-dd"))" />
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Hasta</label>
-                <input type="date" name="hasta" class="form-control" value="@(Model.Hasta?.ToString("yyyy-MM-dd"))" />
-            </div>
-            <div class="col-md-4 d-flex gap-2">
-                <button type="submit" class="btn btn-modern-primary">Filtrar</button>
-                <a asp-action="Index" class="btn btn-modern-secondary">Ver todo</a>
-            </div>
-        </form>
+<div class="informes-page">
+    <header class="informes-header">
+        <div>
+            <h2>Informes</h2>
+            <p>Resumen de ventas, compras, inventario y comparacion de precios por proveedor.</p>
+        </div>
+    </header>
+
+    <div class="card card-modern informes-toolbar">
+        <button class="informes-toolbar-toggle @(filtrosActivos > 0 ? "" : "collapsed")" type="button" data-bs-toggle="collapse" data-bs-target="#informesFiltros" aria-expanded="@(filtrosActivos > 0 ? "true" : "false")">
+            <span>Filtros y periodo</span>
+            @if (filtrosActivos > 0)
+            {
+                <span class="badge-filtros">@filtrosActivos activo@(filtrosActivos == 1 ? "" : "s")</span>
+            }
+        </button>
+        <div class="collapse @(filtrosActivos > 0 ? "show" : "")" id="informesFiltros">
+            <form method="get" id="form-informes" class="informes-filtros-grid">
+                <div class="informes-f-col-2">
+                    <div class="lbl">Desde</div>
+                    <input type="date" name="desde" id="filtroDesde" class="form-control" value="@(Model.Desde?.ToString("yyyy-MM-dd"))" />
+                </div>
+                <div class="informes-f-col-2">
+                    <div class="lbl">Hasta</div>
+                    <input type="date" name="hasta" id="filtroHasta" class="form-control" value="@(Model.Hasta?.ToString("yyyy-MM-dd"))" />
+                </div>
+                <div class="informes-f-col-4">
+                    <div class="lbl">Periodo rapido</div>
+                    <div class="informes-periodo-chips">
+                        <button type="button" class="chip" data-range="hoy">Hoy</button>
+                        <button type="button" class="chip" data-range="7d">7 dias</button>
+                        <button type="button" class="chip" data-range="mes">Este mes</button>
+                        <button type="button" class="chip" data-range="todo">Todo</button>
+                    </div>
+                </div>
+                <div class="informes-f-col-3">
+                    <div class="lbl">Proveedor</div>
+                    <select name="idProveedor" asp-items="ViewBag.ProveedoresFiltro" class="form-select"></select>
+                </div>
+                <div class="informes-f-col-3">
+                    <div class="lbl">Categoria</div>
+                    <select name="idCategoria" asp-items="ViewBag.CategoriasFiltro" class="form-select"></select>
+                </div>
+                <div class="informes-f-col-4">
+                    <div class="lbl">Buscar</div>
+                    <input type="text" name="q" class="form-control" value="@ViewBag.Term" placeholder="Producto, codigo o proveedor" />
+                </div>
+                <div class="informes-f-col-4">
+                    <div class="lbl">Comparar precios (producto)</div>
+                    <select name="idProductoComparar" asp-items="ViewBag.ProductosComparar" class="form-select">
+                        <option value="">Varios proveedores</option>
+                    </select>
+                </div>
+                <div class="informes-f-col-12 informes-acciones">
+                    <button type="submit" class="btn btn-modern-primary">Aplicar filtros</button>
+                    <a asp-action="Index" class="btn btn-modern-secondary">Limpiar</a>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 
-<div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="kpi">
+    <div class="informes-kpis">
+        <div class="informes-kpi">
             <small>Ventas</small>
-            <strong class="d-block mt-1">@Model.Resumen.TotalVentas</strong>
-            <span class="text-muted small">@fmtMoney(Model.Resumen.MontoTotalVentas)</span>
+            <strong>@Model.Resumen.TotalVentas</strong>
+            <span class="sub">@fmtMoney(Model.Resumen.MontoTotalVentas)</span>
+        </div>
+        <div class="informes-kpi kpi-compras">
+            <small>Compras</small>
+            <strong>@fmtMoney(Model.Resumen.MontoTotalCompras)</strong>
+            <span class="sub">@Model.Resumen.EntradasInventario entradas</span>
+        </div>
+        <div class="informes-kpi kpi-productos">
+            <small>Productos</small>
+            <strong>@Model.Resumen.TotalProductos</strong>
+        </div>
+        <div class="informes-kpi kpi-cat">
+            <small>Categorias</small>
+            <strong>@Model.Resumen.TotalCategorias</strong>
+        </div>
+        <div class="informes-kpi kpi-prov">
+            <small>Proveedores</small>
+            <strong>@Model.Resumen.TotalProveedores</strong>
+        </div>
+        <div class="informes-kpi kpi-unidades">
+            <small>Unid. vendidas</small>
+            <strong>@Model.Resumen.UnidadesVendidas</strong>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="kpi">
-            <small>Unidades vendidas</small>
-            <strong class="d-block mt-1">@Model.Resumen.UnidadesVendidas</strong>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="kpi">
-            <small>Entradas inventario</small>
-            <strong class="d-block mt-1">@Model.Resumen.EntradasInventario</strong>
-            <span class="text-muted small">@Model.Resumen.UnidadesIngresadas uds.</span>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="kpi">
-            <small>Salidas inventario</small>
-            <strong class="d-block mt-1">@Model.Resumen.SalidasInventario</strong>
-            <span class="text-muted small">@Model.Resumen.UnidadesRetiradas uds.</span>
-        </div>
-    </div>
-</div>
 
-<ul class="nav nav-tabs mb-3" role="tablist">
-    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-ventas" type="button">Ventas</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-entradas" type="button">Entradas / compras</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-salidas" type="button">Salidas</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-top" type="button">Mas vendidos</button></li>
-</ul>
+    <div class="card card-modern informes-panel">
+        <div class="informes-nav-wrap">
+            <div class="informes-tab-groups" role="tablist">
+                <div class="informes-tab-group">
+                    <label>Ventas</label>
+                    <ul class="nav">
+                        <li><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-ventas" type="button">Listado</button></li>
+                        <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-top" type="button">Mas vendidos</button></li>
+                        <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-salidas" type="button">Salidas</button></li>
+                    </ul>
+                </div>
+                <div class="informes-tab-group">
+                    <label>Compras</label>
+                    <ul class="nav">
+                        <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-entradas" type="button">Entradas</button></li>
+                        <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-compras-prov" type="button">Por proveedor</button></li>
+                        <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-comparacion" type="button">Comparar precios</button></li>
+                        <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-proveedores" type="button">Resumen prov.</button></li>
+                    </ul>
+                </div>
+                <div class="informes-tab-group">
+                    <label>Catalogo</label>
+                    <ul class="nav">
+                        <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-productos" type="button">Productos</button></li>
+                        <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-categorias" type="button">Categorias</button></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
 
-<div class="tab-content">
-    <div class="tab-pane fade show active" id="tab-ventas">
-        <div class="card card-modern">
-            <div class="card-body table-responsive">
+        <div class="tab-content informes-panel-body">
+            <div class="tab-pane fade show active" id="tab-ventas">
                 @if (Model.Ventas.Count == 0)
                 {
-                    <p class="text-muted mb-0">No hay ventas en el periodo seleccionado.</p>
+                    <div class="informes-empty"><div class="icon">📋</div><p>No hay ventas en el periodo seleccionado.</p></div>
                 }
                 else
                 {
-                    <table class="table table-modern table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Fecha</th>
-                                <th>Pago</th>
-                                <th class="text-end">Total</th>
-                                <th class="text-end">Unidades</th>
-                                <th>Detalle</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        @foreach (var v in Model.Ventas)
-                        {
-                            <tr>
-                                <td>@v.IdVenta</td>
-                                <td>@fmtFecha(v.Fecha)</td>
-                                <td>@v.MetodoPago</td>
-                                <td class="text-end">@fmtMoney(v.Total)</td>
-                                <td class="text-end">@v.Unidades</td>
-                                <td class="small">@v.DetalleProductos</td>
-                            </tr>
-                        }
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-modern table-hover mb-0">
+                            <thead><tr><th>#</th><th>Fecha</th><th>Pago</th><th class="text-end">Total</th><th class="text-end">Uds.</th><th>Detalle</th></tr></thead>
+                            <tbody>
+                            @foreach (var v in Model.Ventas)
+                            {
+                                <tr>
+                                    <td><span class="text-muted">@v.IdVenta</span></td>
+                                    <td>@fmtFecha(v.Fecha)</td>
+                                    <td><span class="informes-badge informes-badge-venta">@v.MetodoPago</span></td>
+                                    <td class="text-end fw-semibold">@fmtMoney(v.Total)</td>
+                                    <td class="text-end">@v.Unidades</td>
+                                    <td class="small text-muted">@v.DetalleProductos</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
                 }
             </div>
-        </div>
-    </div>
 
-    <div class="tab-pane fade" id="tab-entradas">
-        <div class="card card-modern">
-            <div class="card-body table-responsive">
-                <p class="text-muted small">Productos que ingresaron al inventario (cantidad positiva).</p>
+            <div class="tab-pane fade" id="tab-entradas">
                 @if (Model.EntradasInventario.Count == 0)
                 {
-                    <p class="text-muted mb-0">No hay entradas en el periodo.</p>
+                    <div class="informes-empty"><div class="icon">📦</div><p>No hay entradas de inventario en el periodo.</p></div>
                 }
                 else
                 {
-                    <table class="table table-modern table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th>Fecha</th>
-                                <th>Producto</th>
-                                <th>Codigo</th>
-                                <th>Categoria</th>
-                                <th class="text-end">Cantidad</th>
-                                <th class="text-end">Stock min.</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        @foreach (var e in Model.EntradasInventario)
-                        {
-                            <tr>
-                                <td>@fmtFecha(e.Fecha)</td>
-                                <td>@e.NombreProducto</td>
-                                <td>@e.CodigoBarras</td>
-                                <td>@e.NombreCategoria</td>
-                                <td class="text-end text-success fw-semibold">+@e.Cantidad</td>
-                                <td class="text-end">@e.StockMinimo</td>
-                            </tr>
-                        }
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-modern table-hover mb-0">
+                            <thead><tr><th>Fecha</th><th>Producto</th><th>Proveedor</th><th>Categoria</th><th class="text-end">Cant.</th><th class="text-end">P. compra</th><th class="text-end">Total</th></tr></thead>
+                            <tbody>
+                            @foreach (var e in Model.EntradasInventario)
+                            {
+                                <tr>
+                                    <td>@fmtFecha(e.Fecha)</td>
+                                    <td>@e.NombreProducto<br /><small class="text-muted">@e.CodigoBarras</small></td>
+                                    <td>@e.NombreProveedor</td>
+                                    <td>@e.NombreCategoria</td>
+                                    <td class="text-end text-success fw-semibold">+@e.Cantidad</td>
+                                    <td class="text-end">@(e.PrecioUnitarioCompra.HasValue ? fmtMoney(e.PrecioUnitarioCompra.Value) : "—")</td>
+                                    <td class="text-end">@fmtMoney(e.TotalCompra)</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
                 }
             </div>
-        </div>
-    </div>
 
-    <div class="tab-pane fade" id="tab-salidas">
-        <div class="card card-modern">
-            <div class="card-body table-responsive">
-                <p class="text-muted small">Salidas de inventario (ventas y otros movimientos negativos).</p>
-                @if (Model.SalidasInventario.Count == 0)
+            <div class="tab-pane fade" id="tab-compras-prov">
+                @if (Model.ComprasPorProveedor.Count == 0)
                 {
-                    <p class="text-muted mb-0">No hay salidas en el periodo.</p>
+                    <div class="informes-empty"><div class="icon">🛒</div><p>No hay compras con precio registrado.</p></div>
                 }
                 else
                 {
-                    <table class="table table-modern table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th>Fecha</th>
-                                <th>Producto</th>
-                                <th>Codigo</th>
-                                <th>Categoria</th>
-                                <th class="text-end">Cantidad</th>
-                                <th>Motivo</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        @foreach (var s in Model.SalidasInventario)
-                        {
-                            <tr>
-                                <td>@fmtFecha(s.Fecha)</td>
-                                <td>@s.NombreProducto</td>
-                                <td>@s.CodigoBarras</td>
-                                <td>@s.NombreCategoria</td>
-                                <td class="text-end text-danger fw-semibold">-@s.Cantidad</td>
-                                <td>@s.Motivo</td>
-                            </tr>
-                        }
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-modern table-hover mb-0">
+                            <thead><tr><th>Fecha</th><th>Proveedor</th><th>Producto</th><th class="text-end">Cant.</th><th class="text-end">P. unit.</th><th class="text-end">Total</th></tr></thead>
+                            <tbody>
+                            @foreach (var c in Model.ComprasPorProveedor)
+                            {
+                                <tr>
+                                    <td>@fmtFecha(c.Fecha)</td>
+                                    <td>@c.NombreProveedor</td>
+                                    <td>@c.NombreProducto</td>
+                                    <td class="text-end">@c.Cantidad</td>
+                                    <td class="text-end">@fmtMoney(c.PrecioUnitario)</td>
+                                    <td class="text-end fw-semibold">@fmtMoney(c.TotalLinea)</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
                 }
             </div>
-        </div>
-    </div>
 
-    <div class="tab-pane fade" id="tab-top">
-        <div class="card card-modern">
-            <div class="card-body table-responsive">
-                @if (Model.ProductosMasVendidos.Count == 0)
+            <div class="tab-pane fade" id="tab-comparacion">
+                @if (Model.ComparacionPreciosProveedores.Count == 0)
                 {
-                    <p class="text-muted mb-0">No hay datos de ventas en el periodo.</p>
+                    <div class="informes-empty">
+                        <div class="icon">⚖️</div>
+                        <p>No hay productos con varios proveedores en el periodo.<br />Registra entradas con distintos proveedores y precios, o elige un producto en los filtros.</p>
+                    </div>
                 }
                 else
                 {
+                    @foreach (var item in Model.ComparacionPreciosProveedores)
+                    {
+                        <div class="informes-compare-card">
+                            <div class="informes-compare-head">
+                                <div>
+                                    <div class="title">@item.NombreProducto</div>
+                                    <div class="meta">@item.CodigoBarras · @item.NombreCategoria</div>
+                                </div>
+                                <div class="d-flex flex-wrap gap-1 justify-content-end">
+                                    <span class="informes-badge informes-badge-venta">Venta @fmtMoney(item.PrecioVenta)</span>
+                                    @if (item.PrecioCompraMasBajo.HasValue)
+                                    {
+                                        <span class="informes-badge informes-badge-mejor">Mejor: @fmtMoney(item.PrecioCompraMasBajo.Value) · @item.ProveedorMasEconomico</span>
+                                    }
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-modern mb-0">
+                                    <thead><tr><th>Proveedor</th><th class="text-end">Ultimo</th><th class="text-end">Min</th><th class="text-end">Max</th><th class="text-end">Prom.</th><th class="text-end">N°</th><th>Ult. fecha</th></tr></thead>
+                                    <tbody>
+                                    @foreach (var pr in item.PreciosPorProveedor)
+                                    {
+                                        var esMejor = pr.UltimoPrecio == item.PrecioCompraMasBajo;
+                                        <tr class="@(esMejor ? "table-success" : "")">
+                                            <td>@pr.NombreProveedor</td>
+                                            <td class="text-end fw-semibold">@(pr.UltimoPrecio.HasValue ? fmtMoney(pr.UltimoPrecio.Value) : "—")</td>
+                                            <td class="text-end">@(pr.PrecioMinimo.HasValue ? fmtMoney(pr.PrecioMinimo.Value) : "—")</td>
+                                            <td class="text-end">@(pr.PrecioMaximo.HasValue ? fmtMoney(pr.PrecioMaximo.Value) : "—")</td>
+                                            <td class="text-end">@(pr.PrecioPromedio.HasValue ? fmtMoney(pr.PrecioPromedio.Value) : "—")</td>
+                                            <td class="text-end">@pr.NumeroCompras</td>
+                                            <td>@(pr.FechaUltimaCompra.HasValue && pr.FechaUltimaCompra != DateTime.MinValue ? fmtFecha(pr.FechaUltimaCompra.Value) : "—")</td>
+                                        </tr>
+                                    }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+
+            <div class="tab-pane fade" id="tab-proveedores">
+                @if (Model.Proveedores.Count == 0)
+                {
+                    <div class="informes-empty"><div class="icon">🏢</div><p>No hay proveedores registrados.</p></div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-modern table-hover mb-0">
+                            <thead><tr><th>Proveedor</th><th>Contacto</th><th class="text-end">Compras</th><th class="text-end">Uds.</th><th class="text-end">Productos</th><th class="text-end">Monto</th></tr></thead>
+                            <tbody>
+                            @foreach (var p in Model.Proveedores)
+                            {
+                                <tr>
+                                    <td><a asp-controller="Proveedores" asp-action="Index">@p.NombreProveedor</a></td>
+                                    <td class="small text-muted">@p.Contacto</td>
+                                    <td class="text-end">@p.NumeroCompras</td>
+                                    <td class="text-end">@p.UnidadesCompradas</td>
+                                    <td class="text-end">@p.ProductosDistintos</td>
+                                    <td class="text-end fw-semibold">@fmtMoney(p.MontoTotalCompras)</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+
+            <div class="tab-pane fade" id="tab-productos">
+                <div class="table-responsive">
                     <table class="table table-modern table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th>Producto</th>
-                                <th>Codigo</th>
-                                <th class="text-end">Unidades</th>
-                                <th class="text-end">Monto</th>
-                            </tr>
-                        </thead>
+                        <thead><tr><th>Producto</th><th>Codigo</th><th>Categoria</th><th>Marca</th><th class="text-end">P. venta</th><th class="text-end">Stock</th><th>Mejor prov.</th><th class="text-end">Mejor compra</th></tr></thead>
                         <tbody>
-                        @foreach (var p in Model.ProductosMasVendidos)
+                        @foreach (var p in Model.ProductosCatalogo)
                         {
                             <tr>
                                 <td>@p.NombreProducto</td>
-                                <td>@p.CodigoBarras</td>
-                                <td class="text-end">@p.UnidadesVendidas</td>
-                                <td class="text-end">@fmtMoney(p.MontoTotal)</td>
+                                <td class="text-muted small">@p.CodigoBarras</td>
+                                <td>@p.NombreCategoria</td>
+                                <td>@(p.Marca ?? "—")</td>
+                                <td class="text-end">@fmtMoney(p.PrecioVenta)</td>
+                                <td class="text-end">@p.StockDisponible</td>
+                                <td>@(p.MejorProveedor ?? "—")</td>
+                                <td class="text-end">@(p.MejorPrecioCompra.HasValue ? fmtMoney(p.MejorPrecioCompra.Value) : "—")</td>
                             </tr>
                         }
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-categorias">
+                <div class="table-responsive">
+                    <table class="table table-modern table-hover mb-0">
+                        <thead><tr><th>Categoria</th><th class="text-end">Productos</th><th class="text-end">Stock total</th></tr></thead>
+                        <tbody>
+                        @foreach (var c in Model.Categorias)
+                        {
+                            <tr><td>@c.NombreCategoria</td><td class="text-end">@c.CantidadProductos</td><td class="text-end">@c.StockTotal</td></tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-salidas">
+                @if (Model.SalidasInventario.Count == 0)
+                {
+                    <div class="informes-empty"><div class="icon">📤</div><p>No hay salidas en el periodo.</p></div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-modern table-hover mb-0">
+                            <thead><tr><th>Fecha</th><th>Producto</th><th>Categoria</th><th class="text-end">Cant.</th><th>Motivo</th></tr></thead>
+                            <tbody>
+                            @foreach (var s in Model.SalidasInventario)
+                            {
+                                <tr>
+                                    <td>@fmtFecha(s.Fecha)</td>
+                                    <td>@s.NombreProducto</td>
+                                    <td>@s.NombreCategoria</td>
+                                    <td class="text-end text-danger fw-semibold">-@s.Cantidad</td>
+                                    <td class="small text-muted">@s.Motivo</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+
+            <div class="tab-pane fade" id="tab-top">
+                @if (Model.ProductosMasVendidos.Count == 0)
+                {
+                    <div class="informes-empty"><div class="icon">🏆</div><p>No hay ventas en el periodo para este ranking.</p></div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-modern table-hover mb-0">
+                            <thead><tr><th>#</th><th>Producto</th><th>Codigo</th><th class="text-end">Unidades</th><th class="text-end">Monto</th></tr></thead>
+                            <tbody>
+                            @{ var rank = 1; }
+                            @foreach (var p in Model.ProductosMasVendidos)
+                            {
+                                <tr>
+                                    <td><span class="informes-badge informes-badge-venta">@rank</span></td>
+                                    <td>@p.NombreProducto</td>
+                                    <td class="text-muted small">@p.CodigoBarras</td>
+                                    <td class="text-end fw-semibold">@p.UnidadesVendidas</td>
+                                    <td class="text-end">@fmtMoney(p.MontoTotal)</td>
+                                </tr>
+                                rank++;
+                            }
+                            </tbody>
+                        </table>
+                    </div>
                 }
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const form = document.getElementById('form-informes');
+            const desde = document.getElementById('filtroDesde');
+            const hasta = document.getElementById('filtroHasta');
+            if (!form || !desde || !hasta) return;
+
+            const fmt = d => d.toISOString().slice(0, 10);
+
+            document.querySelectorAll('[data-range]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const hoy = new Date();
+                    const range = btn.getAttribute('data-range');
+                    let d1 = null, d2 = null;
+
+                    if (range === 'hoy') {
+                        d1 = d2 = hoy;
+                    } else if (range === '7d') {
+                        d2 = hoy;
+                        d1 = new Date(hoy);
+                        d1.setDate(d1.getDate() - 6);
+                    } else if (range === 'mes') {
+                        d1 = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+                        d2 = hoy;
+                    } else {
+                        desde.value = '';
+                        hasta.value = '';
+                        form.submit();
+                        return;
+                    }
+
+                    desde.value = fmt(d1);
+                    hasta.value = fmt(d2);
+                    document.querySelectorAll('[data-range]').forEach(c => c.classList.remove('active'));
+                    btn.classList.add('active');
+                    form.submit();
+                });
+            });
+
+        })();
+    </script>
+}

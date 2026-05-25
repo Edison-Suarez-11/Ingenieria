@@ -1,111 +1,189 @@
 @{
     ViewData["Title"] = "Inicio";
+    int cat = ViewBag.CantidadCategorias ?? 0;
+    int prov = ViewBag.CantidadProveedores ?? 0;
+    int prod = ViewBag.CantidadProductos ?? 0;
+    int mov = ViewBag.CantidadMovimientos ?? 0;
+    int vent = ViewBag.CantidadVentas ?? 0;
+    var alertas = ViewBag.AlertasStock as List<VerticeMusicasWeb.Models.StockDisponibleRow>
+        ?? new List<VerticeMusicasWeb.Models.StockDisponibleRow>();
 }
 
-<section class="hero mb-4">
-    <h1>Vertice Muisca</h1>
-    <p class="mb-0">Gestiona categorias, productos, inventario y consulta de stock desde la web.</p>
-</section>
+@section Styles {
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+}
 
-<div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="kpi">
+<div class="inicio-page">
+    <section class="inicio-hero">
+        <div class="inicio-hero-text">
+            <h1>Vertice Muisca</h1>
+            <p>Panel de control del autoservicio: catalogo, compras a proveedores, inventario, ventas e informes en un solo lugar.</p>
+        </div>
+        <div class="inicio-hero-cta">
+            <a class="btn btn-hero-primary" asp-controller="Ventas" asp-action="Create">Registrar venta</a>
+            <a class="btn btn-hero-outline" asp-controller="Inventario" asp-action="Create">Nueva entrada de inventario</a>
+            <a class="btn btn-hero-outline" asp-controller="Informes" asp-action="Index">Ver informes</a>
+        </div>
+    </section>
+
+    <div class="inicio-stats">
+        <div class="inicio-stat stat-cat">
             <small>Categorias</small>
-            <div class="d-flex justify-content-between align-items-center mt-1">
-                <strong>@(ViewBag.CantidadCategorias ?? 0) registradas</strong>
-                <a class="btn btn-modern-secondary btn-sm" asp-controller="Categorias" asp-action="Index">Abrir</a>
-            </div>
+            <strong>@cat</strong>
+            <span class="unit">registradas</span>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="kpi">
+        <div class="inicio-stat stat-prov">
+            <small>Proveedores</small>
+            <strong>@prov</strong>
+            <span class="unit">activos</span>
+        </div>
+        <div class="inicio-stat stat-prod">
             <small>Productos</small>
-            <div class="d-flex justify-content-between align-items-center mt-1">
-                <strong>@(ViewBag.CantidadProductos ?? 0) en catalogo</strong>
-                <a class="btn btn-modern-primary btn-sm" asp-controller="Productos" asp-action="Index">Abrir</a>
-            </div>
+            <strong>@prod</strong>
+            <span class="unit">en catalogo</span>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="kpi">
-            <small>Movimientos de stock</small>
-            <div class="d-flex justify-content-between align-items-center mt-1">
-                <strong>@(ViewBag.CantidadMovimientos ?? 0) lineas</strong>
-                <a class="btn btn-modern-secondary btn-sm" asp-controller="Inventario" asp-action="Index">Abrir</a>
-            </div>
+        <div class="inicio-stat stat-inv">
+            <small>Inventario</small>
+            <strong>@mov</strong>
+            <span class="unit">movimientos</span>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="kpi">
+        <div class="inicio-stat stat-vent">
             <small>Ventas</small>
-            <div class="d-flex justify-content-between align-items-center mt-1">
-                <strong>@(ViewBag.CantidadVentas ?? 0) registradas</strong>
-                <a class="btn btn-modern-primary btn-sm" asp-controller="Ventas" asp-action="Create">Abrir</a>
+            <strong>@vent</strong>
+            <span class="unit">registradas</span>
+        </div>
+    </div>
+
+    <div class="inicio-layout">
+        <div class="inicio-panel">
+            <div class="inicio-panel-head">
+                <h2>Operacion del dia</h2>
+                <span>Ventas e inventario</span>
+            </div>
+            <div class="inicio-tiles">
+                <a class="inicio-tile tile-pink" asp-controller="Ventas" asp-action="Create">
+                    <span class="icon">🛒</span>
+                    <div class="body">
+                        <h3>Registrar venta</h3>
+                        <p>Cobro y salida automatica de stock.</p>
+                    </div>
+                    <span class="arrow">›</span>
+                </a>
+                <a class="inicio-tile" asp-controller="Inventario" asp-action="Create">
+                    <span class="icon">📦</span>
+                    <div class="body">
+                        <h3>Nueva entrada</h3>
+                        <p>Producto, proveedor, precio y cantidad.</p>
+                    </div>
+                    <span class="arrow">›</span>
+                </a>
+                <a class="inicio-tile tile-blue" asp-controller="ConsultaStock" asp-action="Index">
+                    <span class="icon">📊</span>
+                    <div class="body">
+                        <h3>Consultar stock</h3>
+                        <p>Disponibilidad y alertas por producto.</p>
+                    </div>
+                    <span class="arrow">›</span>
+                </a>
+                <a class="inicio-tile tile-purple" asp-controller="Ventas" asp-action="Historial">
+                    <span class="icon">📋</span>
+                    <div class="body">
+                        <h3>Historial de ventas</h3>
+                        <p>Revisa ventas anteriores.</p>
+                    </div>
+                    <span class="arrow">›</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="inicio-panel">
+            <div class="inicio-panel-head">
+                <h2>Catalogo y compras</h2>
+                <span>Datos maestros</span>
+            </div>
+            <div class="inicio-tiles cols-2">
+                <a class="inicio-tile tile-amber" asp-controller="Categorias" asp-action="Index">
+                    <span class="icon">🏷️</span>
+                    <div class="body">
+                        <h3>Categorias</h3>
+                        <p>@cat en sistema</p>
+                    </div>
+                    <span class="arrow">›</span>
+                </a>
+                <a class="inicio-tile" asp-controller="Productos" asp-action="Index">
+                    <span class="icon">🧃</span>
+                    <div class="body">
+                        <h3>Productos</h3>
+                        <p>@prod en catalogo</p>
+                    </div>
+                    <span class="arrow">›</span>
+                </a>
+                <a class="inicio-tile tile-purple" asp-controller="Proveedores" asp-action="Index">
+                    <span class="icon">🏢</span>
+                    <div class="body">
+                        <h3>Proveedores</h3>
+                        <p>@prov registrados</p>
+                    </div>
+                    <span class="arrow">›</span>
+                </a>
+                <a class="inicio-tile tile-blue" asp-controller="Inventario" asp-action="Index">
+                    <span class="icon">📥</span>
+                    <div class="body">
+                        <h3>Movimientos</h3>
+                        <p>Historial de entradas</p>
+                    </div>
+                    <span class="arrow">›</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="inicio-panel inicio-quick">
+            <div class="inicio-panel-head">
+                <h2>Accesos rapidos</h2>
+                <span>Crear registros nuevos</span>
+            </div>
+            <div class="chips">
+                <a class="chip chip-primary" asp-controller="Categorias" asp-action="Create">+ Categoria</a>
+                <a class="chip chip-secondary" asp-controller="Productos" asp-action="Create">+ Producto</a>
+                <a class="chip chip-secondary" asp-controller="Proveedores" asp-action="Index">Proveedores</a>
+                <a class="chip chip-primary" asp-controller="Ventas" asp-action="Create">+ Venta</a>
+                <a class="chip chip-secondary" asp-controller="Informes" asp-action="Index">Informes</a>
             </div>
         </div>
     </div>
-</div>
 
-<div class="row g-3 mb-4">
-    <div class="col-md-6">
-        <div class="card card-modern h-100">
-            <div class="card-body">
-                <h5 class="mb-2">Inventario</h5>
-                <p class="text-muted mb-3">Registra entradas con fecha, producto y cantidad.</p>
-                <a class="btn btn-modern-primary" asp-controller="Inventario" asp-action="Create">Nueva entrada</a>
+    @if (alertas.Count > 0)
+    {
+        <div class="inicio-alertas">
+            <div class="inicio-alertas-head">
+                <h2>Productos con stock bajo el minimo</h2>
+                <span class="badge rounded-pill">@alertas.Count</span>
             </div>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card card-modern h-100">
-            <div class="card-body">
-                <h5 class="mb-2">Consulta de stock</h5>
-                <p class="text-muted mb-3">Consulta disponibilidad agregada por producto con filtros.</p>
-                <a class="btn btn-modern-secondary" asp-controller="ConsultaStock" asp-action="Index">Ver stock</a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="card card-modern">
-    <div class="card-body">
-        <h5 class="mb-2">Accesos rapidos</h5>
-        <p class="text-muted mb-3">Comienza registrando categorias, luego productos y movimientos.</p>
-        <div class="d-flex gap-2 flex-wrap">
-            <a class="btn btn-modern-primary" asp-controller="Categorias" asp-action="Create">Nueva categoria</a>
-            <a class="btn btn-modern-secondary" asp-controller="Productos" asp-action="Create">Nuevo producto</a>
-            <a class="btn btn-modern-primary" asp-controller="Ventas" asp-action="Create">Registrar venta</a>
-            <a class="btn btn-modern-secondary" asp-controller="Informes" asp-action="Index">Ver informes</a>
-        </div>
-    </div>
-</div>
-
-@if (ViewBag.AlertasStock is List<VerticeMusicasWeb.Models.StockDisponibleRow> alertas && alertas.Count > 0)
-{
-    <div class="card card-modern mt-4 border-danger">
-        <div class="card-body">
-            <h5 class="text-danger mb-3">Alertas de stock minimo</h5>
             <div class="table-responsive">
-                <table class="table table-sm mb-0">
+                <table class="table table-hover mb-0">
                     <thead>
                         <tr>
                             <th>Producto</th>
                             <th class="text-end">Disponible</th>
                             <th class="text-end">Minimo</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
                     @foreach (var item in alertas)
                     {
-                        <tr class="table-danger">
-                            <td>@item.NombreProducto</td>
-                            <td class="text-end">@item.CantidadDisponible</td>
+                        <tr>
+                            <td class="fw-semibold">@item.NombreProducto</td>
+                            <td class="text-end text-danger">@item.CantidadDisponible</td>
                             <td class="text-end">@item.StockMinimo</td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-modern-primary" asp-controller="Inventario" asp-action="Create">Reponer</a>
+                            </td>
                         </tr>
                     }
                     </tbody>
                 </table>
             </div>
         </div>
-    </div>
-}
+    }
+</div>

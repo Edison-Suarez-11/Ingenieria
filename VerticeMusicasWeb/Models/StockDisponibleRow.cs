@@ -9,6 +9,8 @@ public class StockDisponibleRow
     public int CantidadDisponible { get; set; }
     public int StockMinimo { get; set; }
     public bool ManejaStock { get; set; }
+    public string? UltimoProveedor { get; set; }
+    public decimal? UltimoPrecioCompra { get; set; }
     public bool AlertaStockMinimo => ManejaStock && CantidadDisponible <= StockMinimo;
     public bool AlertaStockCritico => ManejaStock && CantidadDisponible <= 0;
 }

@@ -1,0 +1,142 @@
+@model IEnumerable<VerticeMusicasWeb.Models.Proveedor>
+@{
+    ViewData["Title"] = "Proveedores";
+    var lista = Model.ToList();
+    int total = lista.Count;
+    bool hayFiltro = !string.IsNullOrWhiteSpace(ViewBag.Term as string);
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/proveedores.css" asp-append-version="true" />
+}
+
+<div class="proveedores-page">
+    <section class="proveedores-hero">
+        <div>
+            <h1>Proveedores</h1>
+            <p>Registra y administra los proveedores de compra. Se usan al ingresar inventario y en los informes de precios.</p>
+        </div>
+        <div class="proveedores-hero-actions">
+            <button type="button" class="btn btn-light" id="btn-nuevo-proveedor">+ Nuevo proveedor</button>
+            <a class="btn btn-outline-light" asp-controller="Inventario" asp-action="Create">Ir a inventario</a>
+            <a class="btn btn-outline-light" asp-controller="Informes" asp-action="Index">Ver informes</a>
+        </div>
+    </section>
+
+    <div id="proveedor-alert" class="alert alert-modern d-none" role="alert"></div>
+
+    <div class="proveedores-kpis">
+        <div class="proveedores-kpi">
+            <small>Total registrados</small>
+            <strong id="proveedor-count-total">@total</strong>
+        </div>
+        <div class="proveedores-kpi kpi-filtro">
+            <small>En esta vista</small>
+            <strong id="proveedor-count-visible">@total</strong>
+        </div>
+        <div class="proveedores-kpi kpi-inventario">
+            <small>Vinculo</small>
+            <strong class="fs-6 fw-semibold text-muted">Inventario + Informes</strong>
+        </div>
+    </div>
+
+    <div class="card card-modern proveedores-panel">
+        <div class="proveedores-panel-top">
+            <div class="proveedores-form-card" id="proveedores-form-card">
+                <div class="form-title" id="form-proveedor-titulo">
+                    <span class="dot"></span>
+                    Registrar proveedor
+                </div>
+                <form id="form-proveedor" novalidate>
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="IdProveedor" name="IdProveedor" value="0" />
+                    <div class="proveedores-form-grid">
+                        <div>
+                            <div class="lbl">Nombre</div>
+                            <input type="text" id="Nombre" name="Nombre" class="form-control" placeholder="Distribuidora Norte" required />
+                            <span class="text-danger small" data-error-for="Nombre"></span>
+                        </div>
+                        <div>
+                            <div class="lbl">Contacto</div>
+                            <input type="text" id="Contacto" name="Contacto" class="form-control" placeholder="3001234567 / correo" required />
+                            <span class="text-danger small" data-error-for="Contacto"></span>
+                        </div>
+                        <div class="proveedores-form-actions">
+                            <button type="submit" class="btn btn-modern-primary" id="btn-guardar-proveedor">Guardar</button>
+                            <button type="button" class="btn btn-outline-secondary d-none" id="btn-cancelar-edicion">Cancelar</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <form method="get" class="proveedores-search" id="form-buscar-proveedores">
+                <div class="lbl">Buscar</div>
+                <div class="search-row">
+                    <input type="text" name="q" id="filtro-proveedores" value="@ViewBag.Term" class="form-control" placeholder="Nombre o contacto" />
+                    <button type="submit" class="btn btn-modern-secondary">Buscar</button>
+                    @if (hayFiltro)
+                    {
+                        <a asp-action="Index" class="btn btn-outline-secondary">Limpiar</a>
+                    }
+                </div>
+            </form>
+        </div>
+
+        <div class="proveedores-list-header">
+            <h5>Listado de proveedores</h5>
+            @if (hayFiltro)
+            {
+                <span class="badge rounded-pill text-bg-light border">Filtro activo</span>
+            }
+        </div>
+
+        <div class="proveedores-list-body">
+            <div class="proveedores-empty @(lista.Any() ? "d-none" : "")" id="sin-proveedores">
+                <div class="icon">🏢</div>
+                <p class="mb-1 fw-semibold">@(hayFiltro ? "Sin resultados para la busqueda" : "Aun no hay proveedores")</p>
+                <p class="small mb-0">@(hayFiltro ? "Prueba otro termino o limpia el filtro." : "Usa el formulario de arriba para registrar el primero.")</p>
+            </div>
+            <div class="table-responsive @(!lista.Any() ? "d-none" : "")" id="proveedores-table-wrap">
+                <table class="table proveedores-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Proveedor</th>
+                            <th>Contacto</th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-proveedores">
+                    @foreach (var item in lista)
+                    {
+                        var inicial = string.IsNullOrEmpty(item.Nombre) ? "?" : item.Nombre.Trim()[0].ToString().ToUpperInvariant();
+                        <tr data-id="@item.IdProveedor">
+                            <td>
+                                <div class="proveedores-cell-nombre">
+                                    <span class="proveedores-avatar">@inicial</span>
+                                    <div>
+                                        <div class="name col-nombre">@item.Nombre</div>
+                                        <div class="id-tag">ID @item.IdProveedor</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="col-contacto proveedores-contact">@item.Contacto</td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-sm btn-modern-secondary btn-editar-proveedor"
+                                        data-id="@item.IdProveedor"
+                                        data-nombre="@item.Nombre"
+                                        data-contacto="@item.Contacto">
+                                    Editar
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/proveedores.js" asp-append-version="true"></script>
+}

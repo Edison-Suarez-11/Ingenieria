@@ -9,12 +9,32 @@ namespace VerticeMusicasWeb.Controllers;
 
 public class ConsultaStockController(AppDbContext context, InventarioStockService inventarioStock) : Controller
 {
-    public async Task<IActionResult> Index(int? categoriaId, string? q)
+    public async Task<IActionResult> Index(int? categoriaId, int? proveedorId, string? q)
     {
         await CargarCategoriasFiltroAsync(categoriaId);
-        List<StockDisponibleRow> filas = await inventarioStock.GetStockDisponibleAsync(categoriaId, q);
+        await CargarProveedoresFiltroAsync(proveedorId);
+        List<StockDisponibleRow> filas = await inventarioStock.GetStockDisponibleAsync(categoriaId, q, proveedorId);
         ViewBag.Term = q;
         return View(filas);
+    }
+
+    private async Task CargarProveedoresFiltroAsync(int? seleccionado)
+    {
+        var proveedores = await context.Proveedores.AsNoTracking().OrderBy(p => p.Nombre).ToListAsync();
+        var items = new List<SelectListItem>
+        {
+            new() { Value = "", Text = "Todos los proveedores", Selected = !seleccionado.HasValue }
+        };
+        foreach (var p in proveedores)
+        {
+            items.Add(new SelectListItem
+            {
+                Value = p.IdProveedor.ToString(),
+                Text = p.Nombre,
+                Selected = seleccionado == p.IdProveedor
+            });
+        }
+        ViewBag.ProveedoresFiltro = items;
     }
 
     private async Task CargarCategoriasFiltroAsync(int? seleccionada)

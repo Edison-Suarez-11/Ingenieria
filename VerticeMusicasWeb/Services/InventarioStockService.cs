@@ -12,10 +12,25 @@ public class InventarioStockService(AppDbContext db)
 
     public async Task<int> RegistrarMovimientoAsync(DateTime fecha, int idProducto, int cantidad, CancellationToken ct = default)
     {
-        return await RegistrarMovimientoAsync(fecha, idProducto, cantidad, 0, ct);
+        return await RegistrarMovimientoAsync(fecha, idProducto, cantidad, 0, null, null, ct);
     }
 
-    public async Task<int> RegistrarMovimientoAsync(DateTime fecha, int idProducto, int cantidad, int stockMinimo, CancellationToken ct = default)
+    public async Task<int> RegistrarMovimientoAsync(
+        DateTime fecha,
+        int idProducto,
+        int cantidad,
+        int stockMinimo,
+        CancellationToken ct) =>
+        await RegistrarMovimientoAsync(fecha, idProducto, cantidad, stockMinimo, null, null, ct);
+
+    public async Task<int> RegistrarMovimientoAsync(
+        DateTime fecha,
+        int idProducto,
+        int cantidad,
+        int stockMinimo,
+        int? idProveedor = null,
+        decimal? precioUnitarioCompra = null,
+        CancellationToken ct = default)
     {
         if (cantidad == 0)
         {
@@ -25,6 +40,25 @@ public class InventarioStockService(AppDbContext db)
         if (stockMinimo < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(stockMinimo), "El stock minimo no puede ser negativo.");
+        }
+
+        if (cantidad > 0)
+        {
+            if (!idProveedor.HasValue || idProveedor.Value <= 0)
+            {
+                throw new InvalidOperationException("Debe seleccionar un proveedor para la entrada de inventario.");
+            }
+
+            if (!precioUnitarioCompra.HasValue || precioUnitarioCompra.Value <= 0)
+            {
+                throw new InvalidOperationException("El precio de compra debe ser mayor a cero.");
+            }
+
+            bool existeProveedor = await db.Proveedores.AnyAsync(p => p.IdProveedor == idProveedor.Value, ct);
+            if (!existeProveedor)
+            {
+                throw new InvalidOperationException("El proveedor seleccionado no existe.");
+            }
         }
 
         bool existeProducto = await db.Productos.AnyAsync(p => p.IdProducto == idProducto, ct);
@@ -46,7 +80,9 @@ public class InventarioStockService(AppDbContext db)
                 Cantidad = cantidad,
                 StockMinimo = stockMinimo,
                 IdInventario = inv.IdInventario,
-                IdProducto = idProducto
+                IdProducto = idProducto,
+                IdProveedor = cantidad > 0 ? idProveedor : null,
+                PrecioUnitarioCompra = cantidad > 0 ? precioUnitarioCompra : null
             });
             await db.SaveChangesAsync(ct);
             if (!usaTransaccionExistente && tx is not null)
@@ -73,7 +109,11 @@ public class InventarioStockService(AppDbContext db)
         return sum;
     }
 
-    public async Task<List<InventarioMovimientoRow>> GetMovimientosAsync(int? idCategoria, string? term, CancellationToken ct = default)
+    public async Task<List<InventarioMovimientoRow>> GetMovimientosAsync(
+        int? idCategoria,
+        string? term,
+        int? idProveedor = null,
+        CancellationToken ct = default)
     {
         bool tieneTerm = !string.IsNullOrWhiteSpace(term);
         string? normalized = tieneTerm ? term!.Trim() : null;
@@ -83,12 +123,20 @@ public class InventarioStockService(AppDbContext db)
             join i in db.Inventarios on s.IdInventario equals i.IdInventario
             join p in db.Productos on s.IdProducto equals p.IdProducto
             join c in db.Categorias on p.IdCategoria equals c.IdCategoria
-            select new { s, i, p, c };
+            join pr in db.Proveedores on s.IdProveedor equals pr.IdProveedor into proveedores
+            from pr in proveedores.DefaultIfEmpty()
+            select new { s, i, p, c, pr };
 
         if (idCategoria.HasValue)
         {
             int cid = idCategoria.Value;
             query = query.Where(x => x.c.IdCategoria == cid);
+        }
+
+        if (idProveedor.HasValue)
+        {
+            int pid = idProveedor.Value;
+            query = query.Where(x => x.s.IdProveedor == pid);
         }
 
         if (tieneTerm && normalized is not null)
@@ -110,7 +158,9 @@ public class InventarioStockService(AppDbContext db)
                 NombreProducto = x.p.Nombre,
                 x.p.CodigoBarras,
                 NombreCategoria = x.c.NombreCategoria,
-                x.s.Cantidad
+                x.s.Cantidad,
+                NombreProveedor = x.pr != null ? x.pr.Nombre : null,
+                x.s.PrecioUnitarioCompra
             })
             .ToListAsync(ct);
 
@@ -124,11 +174,17 @@ public class InventarioStockService(AppDbContext db)
             NombreProducto = x.NombreProducto,
             CodigoBarras = x.CodigoBarras,
             NombreCategoria = x.NombreCategoria,
-            Cantidad = x.Cantidad
+            Cantidad = x.Cantidad,
+            NombreProveedor = x.NombreProveedor,
+            PrecioUnitarioCompra = x.PrecioUnitarioCompra
         });
     }
 
-    public async Task<List<StockDisponibleRow>> GetStockDisponibleAsync(int? idCategoria, string? term, CancellationToken ct = default)
+    public async Task<List<StockDisponibleRow>> GetStockDisponibleAsync(
+        int? idCategoria,
+        string? term,
+        int? idProveedor = null,
+        CancellationToken ct = default)
     {
         bool tieneTerm = !string.IsNullOrWhiteSpace(term);
         string? normalized = tieneTerm ? term!.Trim() : null;
@@ -150,7 +206,14 @@ public class InventarioStockService(AppDbContext db)
                 EF.Functions.Like(p.CodigoBarras, like));
         }
 
-        return await productos
+        if (idProveedor.HasValue)
+        {
+            int pid = idProveedor.Value;
+            productos = productos.Where(p => p.MovimientosStock.Any(m =>
+                m.Cantidad > 0 && m.IdProveedor == pid));
+        }
+
+        var lista = await productos
             .Select(p => new StockDisponibleRow
             {
                 IdProducto = p.IdProducto,
@@ -163,6 +226,36 @@ public class InventarioStockService(AppDbContext db)
             })
             .OrderBy(x => x.CantidadDisponible)
             .ToListAsync(ct);
+
+        if (lista.Count == 0)
+        {
+            return lista;
+        }
+
+        var ids = lista.Select(x => x.IdProducto).ToList();
+        var ultimasCompras = await (
+            from s in db.MovimientosStock.AsNoTracking()
+            join pr in db.Proveedores on s.IdProveedor equals pr.IdProveedor
+            where ids.Contains(s.IdProducto) && s.Cantidad > 0 && s.PrecioUnitarioCompra != null
+            orderby s.IdStock descending
+            select new
+            {
+                s.IdProducto,
+                pr.Nombre,
+                s.PrecioUnitarioCompra
+            }).ToListAsync(ct);
+
+        foreach (StockDisponibleRow row in lista)
+        {
+            var ultima = ultimasCompras.FirstOrDefault(x => x.IdProducto == row.IdProducto);
+            if (ultima is not null)
+            {
+                row.UltimoProveedor = ultima.Nombre;
+                row.UltimoPrecioCompra = ultima.PrecioUnitarioCompra;
+            }
+        }
+
+        return lista;
     }
 
     public async Task<int> ObtenerStockMinimoActualAsync(int idProducto, CancellationToken ct = default)

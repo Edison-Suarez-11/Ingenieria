@@ -9,4 +9,7 @@ public class InventarioMovimientoRow
     public string CodigoBarras { get; set; } = string.Empty;
     public string NombreCategoria { get; set; } = string.Empty;
     public int Cantidad { get; set; }
+    public string? NombreProveedor { get; set; }
+    public decimal? PrecioUnitarioCompra { get; set; }
+    public decimal? TotalCompra => PrecioUnitarioCompra.HasValue ? PrecioUnitarioCompra * Cantidad : null;
 }
