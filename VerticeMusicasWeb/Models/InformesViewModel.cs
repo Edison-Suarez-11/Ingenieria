@@ -106,10 +106,26 @@ public class InformeProveedorResumenFila
     public int IdProveedor { get; set; }
     public string NombreProveedor { get; set; } = string.Empty;
     public string Contacto { get; set; } = string.Empty;
+    public string? Nit { get; set; }
+    public string? PersonaContacto { get; set; }
+    public string? Celular { get; set; }
+    public string? CorreoElectronico { get; set; }
+    public string? TelefonoFijo { get; set; }
+    public string? Ciudad { get; set; }
+    public string? Direccion { get; set; }
     public int NumeroCompras { get; set; }
     public int UnidadesCompradas { get; set; }
     public decimal MontoTotalCompras { get; set; }
     public int ProductosDistintos { get; set; }
+
+    public string ResumenContacto()
+    {
+        var partes = new List<string>();
+        if (!string.IsNullOrWhiteSpace(Celular)) partes.Add(Celular.Trim());
+        if (!string.IsNullOrWhiteSpace(CorreoElectronico)) partes.Add(CorreoElectronico.Trim());
+        if (partes.Count > 0) return string.Join(" · ", partes);
+        return string.IsNullOrWhiteSpace(Contacto) ? "—" : Contacto.Trim();
+    }
 }
 
 public class InformeCompraProveedorFila

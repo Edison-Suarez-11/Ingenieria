@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using VerticeMusicasWeb.Data;
+using VerticeMusicasWeb.Helpers;
 using VerticeMusicasWeb.Models;
 using VerticeMusicasWeb.Services;
 
@@ -41,6 +42,10 @@ public class InventarioController(AppDbContext context, InventarioStockService i
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(RegistrarEntradaViewModel model)
     {
+        NormalizarPreciosDesdeFormulario(model);
+        ModelState.Clear();
+        TryValidateModel(model);
+
         if (!await context.Productos.AnyAsync(p => p.IdProducto == model.IdProducto))
         {
             ModelState.AddModelError(nameof(model.IdProducto), "El producto seleccionado no es valido.");
@@ -105,7 +110,7 @@ public class InventarioController(AppDbContext context, InventarioStockService i
         var items = await context.Proveedores
             .AsNoTracking()
             .OrderBy(p => p.Nombre)
-            .Select(p => new { p.IdProveedor, Texto = p.Nombre + " — " + p.Contacto })
+            .Select(p => new { p.IdProveedor, Texto = p.Nombre + " — " + (p.Celular ?? p.CorreoElectronico ?? p.Contacto) })
             .ToListAsync();
         ViewBag.Proveedores = new SelectList(items, "IdProveedor", "Texto", seleccionado);
     }
@@ -146,5 +151,30 @@ public class InventarioController(AppDbContext context, InventarioStockService i
             });
         }
         ViewBag.CategoriasFiltro = items;
+    }
+
+    private void NormalizarPreciosDesdeFormulario(RegistrarEntradaViewModel model)
+    {
+        if (NumeroColombianoHelper.TryParsePrecio(Request.Form[nameof(model.PrecioUnitarioCompra)], out decimal compra))
+        {
+            model.PrecioUnitarioCompra = compra;
+        }
+
+        if (NumeroColombianoHelper.TryParsePorcentaje(Request.Form[nameof(model.PorcentajeMargenVenta)], out decimal margen))
+        {
+            model.PorcentajeMargenVenta = margen;
+        }
+
+        if (NumeroColombianoHelper.TryParsePrecio(Request.Form[nameof(model.PrecioVentaSugerido)], out decimal venta))
+        {
+            model.PrecioVentaSugerido = venta;
+        }
+        else if (model.PrecioUnitarioCompra > 0 && model.PorcentajeMargenVenta > 0)
+        {
+            model.PrecioVentaSugerido = Math.Round(
+                model.PrecioUnitarioCompra + model.PrecioUnitarioCompra * model.PorcentajeMargenVenta / 100m,
+                2,
+                MidpointRounding.AwayFromZero);
+        }
     }
 }

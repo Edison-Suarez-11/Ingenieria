@@ -22,7 +22,7 @@ public static class InformesSeccion
         [Entradas] = "Entradas de inventario",
         [ComprasProveedor] = "Compras por proveedor",
         [Comparacion] = "Comparacion de precios",
-        [Proveedores] = "Resumen de proveedores",
+        [Proveedores] = "Directorio de proveedores",
         [Productos] = "Catalogo de productos",
         [Categorias] = "Categorias",
         [Completo] = "Informe completo"

@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 using VerticeMusicasWeb.Data;
 using VerticeMusicasWeb.Models;
@@ -15,7 +16,14 @@ public class ProveedorService(AppDbContext context)
             string like = $"%{busqueda.Trim()}%";
             query = query.Where(p =>
                 EF.Functions.Like(p.Nombre, like) ||
-                EF.Functions.Like(p.Contacto, like));
+                EF.Functions.Like(p.Contacto, like) ||
+                (p.PersonaContacto != null && EF.Functions.Like(p.PersonaContacto, like)) ||
+                (p.Celular != null && EF.Functions.Like(p.Celular, like)) ||
+                (p.CorreoElectronico != null && EF.Functions.Like(p.CorreoElectronico, like)) ||
+                (p.Ciudad != null && EF.Functions.Like(p.Ciudad, like)) ||
+                (p.Direccion != null && EF.Functions.Like(p.Direccion, like)) ||
+                (p.Nit != null && EF.Functions.Like(p.Nit, like)) ||
+                (p.TelefonoFijo != null && EF.Functions.Like(p.TelefonoFijo, like)));
         }
 
         return await query.OrderByDescending(p => p.IdProveedor).ToListAsync();
@@ -42,12 +50,7 @@ public class ProveedorService(AppDbContext context)
 
         try
         {
-            var nuevo = new Proveedor
-            {
-                Nombre = proveedor.Nombre.Trim(),
-                Contacto = proveedor.Contacto.Trim()
-            };
-
+            var nuevo = MapearProveedor(proveedor);
             context.Proveedores.Add(nuevo);
             await context.SaveChangesAsync();
 
@@ -95,8 +98,7 @@ public class ProveedorService(AppDbContext context)
 
         try
         {
-            existente.Nombre = proveedor.Nombre.Trim();
-            existente.Contacto = proveedor.Contacto.Trim();
+            AplicarCambios(existente, proveedor);
             await context.SaveChangesAsync();
 
             return new ProveedorOperacionResultado
@@ -116,6 +118,48 @@ public class ProveedorService(AppDbContext context)
         }
     }
 
+    private static Proveedor MapearProveedor(Proveedor proveedor)
+    {
+        var nuevo = new Proveedor
+        {
+            Nombre = proveedor.Nombre.Trim(),
+            PersonaContacto = NormalizarOpcional(proveedor.PersonaContacto),
+            Celular = NormalizarOpcional(proveedor.Celular),
+            CorreoElectronico = NormalizarOpcional(proveedor.CorreoElectronico)?.ToLowerInvariant(),
+            Ciudad = NormalizarOpcional(proveedor.Ciudad),
+            Direccion = NormalizarOpcional(proveedor.Direccion),
+            Nit = NormalizarOpcional(proveedor.Nit),
+            TelefonoFijo = NormalizarOpcional(proveedor.TelefonoFijo)
+        };
+        nuevo.Contacto = ConstruirContactoLegacy(nuevo);
+        return nuevo;
+    }
+
+    private static void AplicarCambios(Proveedor existente, Proveedor proveedor)
+    {
+        existente.Nombre = proveedor.Nombre.Trim();
+        existente.PersonaContacto = NormalizarOpcional(proveedor.PersonaContacto);
+        existente.Celular = NormalizarOpcional(proveedor.Celular);
+        existente.CorreoElectronico = NormalizarOpcional(proveedor.CorreoElectronico)?.ToLowerInvariant();
+        existente.Ciudad = NormalizarOpcional(proveedor.Ciudad);
+        existente.Direccion = NormalizarOpcional(proveedor.Direccion);
+        existente.Nit = NormalizarOpcional(proveedor.Nit);
+        existente.TelefonoFijo = NormalizarOpcional(proveedor.TelefonoFijo);
+        existente.Contacto = ConstruirContactoLegacy(existente);
+    }
+
+    private static string? NormalizarOpcional(string? valor) =>
+        string.IsNullOrWhiteSpace(valor) ? null : valor.Trim();
+
+    private static string ConstruirContactoLegacy(Proveedor proveedor)
+    {
+        var partes = new List<string>();
+        if (!string.IsNullOrWhiteSpace(proveedor.Celular)) partes.Add(proveedor.Celular);
+        if (!string.IsNullOrWhiteSpace(proveedor.CorreoElectronico)) partes.Add(proveedor.CorreoElectronico);
+        if (partes.Count > 0) return string.Join(" / ", partes);
+        return proveedor.Contacto?.Trim() ?? string.Empty;
+    }
+
     private static ProveedorOperacionResultado ValidarCampos(Proveedor proveedor)
     {
         var errores = new Dictionary<string, string[]>();
@@ -125,9 +169,17 @@ public class ProveedorService(AppDbContext context)
             errores[nameof(Proveedor.Nombre)] = ["El nombre del proveedor es obligatorio."];
         }
 
-        if (string.IsNullOrWhiteSpace(proveedor.Contacto))
+        bool tieneCelular = !string.IsNullOrWhiteSpace(proveedor.Celular);
+        bool tieneCorreo = !string.IsNullOrWhiteSpace(proveedor.CorreoElectronico);
+        if (!tieneCelular && !tieneCorreo)
         {
-            errores[nameof(Proveedor.Contacto)] = ["El contacto del proveedor es obligatorio."];
+            errores[nameof(Proveedor.Celular)] = ["Indica al menos un celular o un correo electronico."];
+            errores[nameof(Proveedor.CorreoElectronico)] = ["Indica al menos un celular o un correo electronico."];
+        }
+
+        if (tieneCorreo && !new EmailAddressAttribute().IsValid(proveedor.CorreoElectronico))
+        {
+            errores[nameof(Proveedor.CorreoElectronico)] = ["El correo electronico no tiene un formato valido."];
         }
 
         if (errores.Count > 0)

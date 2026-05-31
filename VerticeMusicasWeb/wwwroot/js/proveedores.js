@@ -13,7 +13,13 @@
     const btnNuevo = document.getElementById('btn-nuevo-proveedor');
     const inputId = document.getElementById('IdProveedor');
     const inputNombre = document.getElementById('Nombre');
-    const inputContacto = document.getElementById('Contacto');
+    const inputNit = document.getElementById('Nit');
+    const inputPersonaContacto = document.getElementById('PersonaContacto');
+    const inputCelular = document.getElementById('Celular');
+    const inputCorreo = document.getElementById('CorreoElectronico');
+    const inputTelefono = document.getElementById('TelefonoFijo');
+    const inputCiudad = document.getElementById('Ciudad');
+    const inputDireccion = document.getElementById('Direccion');
     const countVisible = document.getElementById('proveedor-count-visible');
     const countTotal = document.getElementById('proveedor-count-total');
     const token = form.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
@@ -22,6 +28,10 @@
         crear: '/Proveedores/Create',
         editar: '/Proveedores/Edit'
     };
+
+    function val(proveedor, camel, pascal) {
+        return proveedor[camel] ?? proveedor[pascal] ?? '';
+    }
 
     function actualizarContadores() {
         const rows = tabla ? tabla.querySelectorAll('tr[data-id]').length : 0;
@@ -71,14 +81,20 @@
     }
 
     function modoEdicion(proveedor) {
-        const id = proveedor.idProveedor ?? proveedor.IdProveedor;
+        const id = val(proveedor, 'idProveedor', 'IdProveedor');
         tituloForm.innerHTML = '<span class="dot"></span> Editar proveedor';
         btnGuardar.textContent = 'Actualizar';
         btnCancelar.classList.remove('d-none');
         formCard?.classList.add('is-editing');
         inputId.value = id;
-        inputNombre.value = proveedor.nombre ?? proveedor.Nombre ?? '';
-        inputContacto.value = proveedor.contacto ?? proveedor.Contacto ?? '';
+        inputNombre.value = val(proveedor, 'nombre', 'Nombre');
+        inputNit.value = val(proveedor, 'nit', 'Nit');
+        inputPersonaContacto.value = val(proveedor, 'personaContacto', 'PersonaContacto');
+        inputCelular.value = val(proveedor, 'celular', 'Celular');
+        inputCorreo.value = val(proveedor, 'correoElectronico', 'CorreoElectronico');
+        inputTelefono.value = val(proveedor, 'telefonoFijo', 'TelefonoFijo');
+        inputCiudad.value = val(proveedor, 'ciudad', 'Ciudad');
+        inputDireccion.value = val(proveedor, 'direccion', 'Direccion');
         limpiarErrores();
         marcarFilaEditando(id);
         formCard?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -89,35 +105,15 @@
         return n ? n[0].toUpperCase() : '?';
     }
 
-    function crearFila(proveedor) {
-        const id = proveedor.idProveedor ?? proveedor.IdProveedor;
-        const nombre = proveedor.nombre ?? proveedor.Nombre ?? '';
-        const contacto = proveedor.contacto ?? proveedor.Contacto ?? '';
-        const inicial = inicialProveedor(nombre);
-        const tr = document.createElement('tr');
-        tr.dataset.id = id;
-        tr.innerHTML = `
-            <td>
-                <div class="proveedores-cell-nombre">
-                    <span class="proveedores-avatar">${inicial}</span>
-                    <div>
-                        <div class="name col-nombre"></div>
-                        <div class="id-tag">ID ${id}</div>
-                    </div>
-                </div>
-            </td>
-            <td class="col-contacto proveedores-contact"></td>
-            <td class="text-end">
-                <button type="button" class="btn btn-sm btn-modern-secondary btn-editar-proveedor"
-                        data-id="${id}"
-                        data-nombre="${escapeAttr(nombre)}"
-                        data-contacto="${escapeAttr(contacto)}">
-                    Editar
-                </button>
-            </td>`;
-        tr.querySelector('.col-nombre').textContent = nombre;
-        tr.querySelector('.col-contacto').textContent = contacto;
-        return tr;
+    function resumenContacto(proveedor) {
+        const partes = [];
+        const celular = val(proveedor, 'celular', 'Celular');
+        const correo = val(proveedor, 'correoElectronico', 'CorreoElectronico');
+        const contacto = val(proveedor, 'contacto', 'Contacto');
+        if (celular) partes.push(celular);
+        if (correo) partes.push(correo);
+        if (partes.length) return partes.join(' · ');
+        return contacto || '—';
     }
 
     function escapeAttr(value) {
@@ -127,22 +123,71 @@
             .replace(/</g, '&lt;');
     }
 
+    function crearFila(proveedor) {
+        const id = val(proveedor, 'idProveedor', 'IdProveedor');
+        const nombre = val(proveedor, 'nombre', 'Nombre');
+        const nit = val(proveedor, 'nit', 'Nit');
+        const persona = val(proveedor, 'personaContacto', 'PersonaContacto');
+        const celular = val(proveedor, 'celular', 'Celular');
+        const correo = val(proveedor, 'correoElectronico', 'CorreoElectronico');
+        const telefono = val(proveedor, 'telefonoFijo', 'TelefonoFijo');
+        const ciudad = val(proveedor, 'ciudad', 'Ciudad');
+        const direccion = val(proveedor, 'direccion', 'Direccion');
+        const inicial = inicialProveedor(nombre);
+        const resumen = resumenContacto(proveedor);
+        const tr = document.createElement('tr');
+        tr.dataset.id = id;
+        tr.innerHTML = `
+            <td>
+                <div class="proveedores-cell-nombre">
+                    <span class="proveedores-avatar">${inicial}</span>
+                    <div>
+                        <div class="name col-nombre"></div>
+                        <div class="id-tag"></div>
+                    </div>
+                </div>
+            </td>
+            <td class="col-contacto proveedores-contact">
+                <div class="col-persona"></div>
+                <div class="col-resumen"></div>
+            </td>
+            <td class="col-ciudad"></td>
+            <td class="col-direccion proveedores-contact"></td>
+            <td class="text-end">
+                <button type="button" class="btn btn-sm btn-modern-secondary btn-editar-proveedor"
+                        data-id="${id}"
+                        data-nombre="${escapeAttr(nombre)}"
+                        data-nit="${escapeAttr(nit)}"
+                        data-persona-contacto="${escapeAttr(persona)}"
+                        data-celular="${escapeAttr(celular)}"
+                        data-correo="${escapeAttr(correo)}"
+                        data-telefono="${escapeAttr(telefono)}"
+                        data-ciudad="${escapeAttr(ciudad)}"
+                        data-direccion="${escapeAttr(direccion)}">
+                    Editar
+                </button>
+            </td>`;
+        tr.querySelector('.col-nombre').textContent = nombre;
+        tr.querySelector('.id-tag').textContent = nit ? `NIT ${nit}` : `ID ${id}`;
+        const personaEl = tr.querySelector('.col-persona');
+        if (persona) {
+            personaEl.textContent = persona;
+        } else {
+            personaEl.remove();
+        }
+        tr.querySelector('.col-resumen').textContent = resumen;
+        tr.querySelector('.col-ciudad').textContent = ciudad || '—';
+        tr.querySelector('.col-direccion').textContent = direccion || '—';
+        return tr;
+    }
+
     function actualizarFila(proveedor) {
-        const id = proveedor.idProveedor ?? proveedor.IdProveedor;
+        const id = val(proveedor, 'idProveedor', 'IdProveedor');
         const fila = tabla?.querySelector(`tr[data-id="${id}"]`);
         if (!fila) return;
 
-        const nombre = proveedor.nombre ?? proveedor.Nombre ?? '';
-        const contacto = proveedor.contacto ?? proveedor.Contacto ?? '';
-
-        fila.querySelector('.col-nombre').textContent = nombre;
-        fila.querySelector('.col-contacto').textContent = contacto;
-        const avatar = fila.querySelector('.proveedores-avatar');
-        if (avatar) avatar.textContent = inicialProveedor(nombre);
-
-        const btn = fila.querySelector('.btn-editar-proveedor');
-        btn.dataset.nombre = nombre;
-        btn.dataset.contacto = contacto;
+        const nueva = crearFila(proveedor);
+        fila.replaceWith(nueva);
     }
 
     function agregarFila(proveedor) {
@@ -158,12 +203,32 @@
         actualizarContadores();
     }
 
+    function leerFormulario() {
+        return {
+            idProveedor: parseInt(inputId.value, 10) || 0,
+            nombre: inputNombre.value.trim(),
+            nit: inputNit.value.trim(),
+            personaContacto: inputPersonaContacto.value.trim(),
+            celular: inputCelular.value.trim(),
+            correoElectronico: inputCorreo.value.trim(),
+            telefonoFijo: inputTelefono.value.trim(),
+            ciudad: inputCiudad.value.trim(),
+            direccion: inputDireccion.value.trim()
+        };
+    }
+
     async function enviarFormulario(url, datos) {
         const body = new URLSearchParams();
         body.append('__RequestVerificationToken', token);
         body.append('IdProveedor', datos.idProveedor);
         body.append('Nombre', datos.nombre);
-        body.append('Contacto', datos.contacto);
+        body.append('Nit', datos.nit);
+        body.append('PersonaContacto', datos.personaContacto);
+        body.append('Celular', datos.celular);
+        body.append('CorreoElectronico', datos.correoElectronico);
+        body.append('TelefonoFijo', datos.telefonoFijo);
+        body.append('Ciudad', datos.ciudad);
+        body.append('Direccion', datos.direccion);
 
         const response = await fetch(url, {
             method: 'POST',
@@ -181,14 +246,8 @@
         e.preventDefault();
         limpiarErrores();
 
-        const id = parseInt(inputId.value, 10) || 0;
-        const datos = {
-            idProveedor: id,
-            nombre: inputNombre.value.trim(),
-            contacto: inputContacto.value.trim()
-        };
-
-        const url = id > 0 ? `${urls.editar}/${id}` : urls.crear;
+        const datos = leerFormulario();
+        const url = datos.idProveedor > 0 ? `${urls.editar}/${datos.idProveedor}` : urls.crear;
         const resultado = await enviarFormulario(url, datos);
 
         if (!resultado.exito) {
@@ -199,7 +258,7 @@
 
         mostrarAlerta(resultado.mensaje, 'success');
 
-        if (id > 0) {
+        if (datos.idProveedor > 0) {
             actualizarFila(resultado.proveedor);
         } else {
             agregarFila(resultado.proveedor);
@@ -215,7 +274,13 @@
         modoEdicion({
             IdProveedor: btn.dataset.id,
             Nombre: btn.dataset.nombre,
-            Contacto: btn.dataset.contacto
+            Nit: btn.dataset.nit,
+            PersonaContacto: btn.dataset.personaContacto,
+            Celular: btn.dataset.celular,
+            CorreoElectronico: btn.dataset.correo,
+            TelefonoFijo: btn.dataset.telefono,
+            Ciudad: btn.dataset.ciudad,
+            Direccion: btn.dataset.direccion
         });
     });
 

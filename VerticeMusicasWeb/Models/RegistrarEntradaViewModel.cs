@@ -32,7 +32,7 @@ public class RegistrarEntradaViewModel
     public decimal PrecioUnitarioCompra { get; set; }
 
     [Required(ErrorMessage = "El porcentaje de margen es obligatorio.")]
-    [Range(0.01, 999.99, ErrorMessage = "El porcentaje de margen debe ser mayor a cero.")]
+    [Range(0.01, 10000, ErrorMessage = "El porcentaje de margen debe estar entre 0,01% y 10.000%.")]
     [Display(Name = "Porcentaje de margen de venta (%)")]
     public decimal PorcentajeMargenVenta { get; set; } = 30;
 

@@ -37,6 +37,20 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.Property(p => p.Nombre)
                 .HasColumnName("nombre")
                 .IsRequired();
+            entity.Property(p => p.PersonaContacto)
+                .HasColumnName("personaContacto");
+            entity.Property(p => p.Celular)
+                .HasColumnName("celular");
+            entity.Property(p => p.CorreoElectronico)
+                .HasColumnName("correoElectronico");
+            entity.Property(p => p.Ciudad)
+                .HasColumnName("ciudad");
+            entity.Property(p => p.Direccion)
+                .HasColumnName("direccion");
+            entity.Property(p => p.Nit)
+                .HasColumnName("nit");
+            entity.Property(p => p.TelefonoFijo)
+                .HasColumnName("telefonoFijo");
             entity.Property(p => p.Contacto)
                 .HasColumnName("contacto")
                 .IsRequired();

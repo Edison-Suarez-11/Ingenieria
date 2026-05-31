@@ -138,9 +138,13 @@
 
 .proveedores-form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr auto;
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.6rem 0.75rem;
   align-items: end;
+}
+
+.proveedores-field-span-2 {
+  grid-column: span 2;
 }
 
 .proveedores-form-grid .lbl {
@@ -282,6 +286,16 @@
   font-size: 0.82rem;
 }
 
+.proveedores-contact .col-persona {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 0.82rem;
+}
+
+.proveedores-contact .col-resumen {
+  font-size: 0.8rem;
+}
+
 .proveedores-empty {
   text-align: center;
   padding: 2.5rem 1rem;
@@ -306,6 +320,9 @@
   .proveedores-form-grid {
     grid-template-columns: 1fr 1fr;
   }
+  .proveedores-field-span-2 {
+    grid-column: span 2;
+  }
   .proveedores-form-actions {
     grid-column: span 2;
   }
@@ -321,6 +338,7 @@
   .proveedores-form-grid {
     grid-template-columns: 1fr;
   }
+  .proveedores-field-span-2,
   .proveedores-form-actions {
     grid-column: span 1;
   }

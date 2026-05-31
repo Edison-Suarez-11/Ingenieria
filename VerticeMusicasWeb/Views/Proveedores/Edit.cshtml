@@ -4,7 +4,7 @@
 }
 
 <div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
+    <div class="col-md-8 col-lg-7">
         <div class="card card-modern">
             <div class="card-body p-4">
                 <h3 class="mb-3">Editar Proveedor</h3>
@@ -16,12 +16,44 @@
                         <input asp-for="Nombre" class="form-control" />
                         <span asp-validation-for="Nombre" class="text-danger"></span>
                     </div>
-                    <div class="mb-3">
-                        <label asp-for="Contacto" class="form-label"></label>
-                        <input asp-for="Contacto" class="form-control" />
-                        <span asp-validation-for="Contacto" class="text-danger"></span>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Nit" class="form-label"></label>
+                            <input asp-for="Nit" class="form-control" />
+                            <span asp-validation-for="Nit" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="PersonaContacto" class="form-label"></label>
+                            <input asp-for="PersonaContacto" class="form-control" />
+                            <span asp-validation-for="PersonaContacto" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Celular" class="form-label"></label>
+                            <input asp-for="Celular" class="form-control" />
+                            <span asp-validation-for="Celular" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="CorreoElectronico" class="form-label"></label>
+                            <input asp-for="CorreoElectronico" class="form-control" />
+                            <span asp-validation-for="CorreoElectronico" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="TelefonoFijo" class="form-label"></label>
+                            <input asp-for="TelefonoFijo" class="form-control" />
+                            <span asp-validation-for="TelefonoFijo" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Ciudad" class="form-label"></label>
+                            <input asp-for="Ciudad" class="form-control" />
+                            <span asp-validation-for="Ciudad" class="text-danger"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Direccion" class="form-label"></label>
+                            <input asp-for="Direccion" class="form-control" />
+                            <span asp-validation-for="Direccion" class="text-danger"></span>
+                        </div>
                     </div>
-                    <div class="d-flex gap-2">
+                    <div class="d-flex gap-2 mt-4">
                         <button type="submit" class="btn btn-modern-primary">Guardar Cambios</button>
                         <a asp-action="Index" class="btn btn-modern-secondary">Volver</a>
                     </div>

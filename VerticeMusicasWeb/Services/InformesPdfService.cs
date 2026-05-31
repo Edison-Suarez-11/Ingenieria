@@ -302,26 +302,60 @@ public class InformesPdfService
     {
         container.Column(col =>
         {
-            col.Item().Element(c => TituloSeccion(c, "Resumen por proveedor", filas.Count));
+            col.Item().Element(c => TituloSeccion(c, "Directorio de proveedores", filas.Count));
             if (filas.Count == 0)
             {
                 col.Item().Element(SinDatos);
                 return;
             }
 
-            col.Item().Table(table =>
-        {
-            Encabezado(table, "Proveedor", "Contacto", "Compras", "Uds.", "Productos", "Monto");
-            foreach (InformeProveedorResumenFila p in filas.Take(MaxFilasTabla))
+            col.Item().PaddingTop(4).Table(table =>
             {
-                table.Cell().Text(p.NombreProveedor);
-                table.Cell().Text(Truncar(p.Contacto, 25));
-                table.Cell().AlignRight().Text(p.NumeroCompras.ToString(Cultura));
-                table.Cell().AlignRight().Text(p.UnidadesCompradas.ToString(Cultura));
-                table.Cell().AlignRight().Text(p.ProductosDistintos.ToString(Cultura));
-                table.Cell().AlignRight().Text(Dinero(p.MontoTotalCompras));
-            }
+                Encabezado(table, "Proveedor", "Compras", "Uds.", "Productos", "Monto");
+                foreach (InformeProveedorResumenFila p in filas.Take(MaxFilasTabla))
+                {
+                    table.Cell().Text(p.NombreProveedor);
+                    table.Cell().AlignRight().Text(p.NumeroCompras.ToString(Cultura));
+                    table.Cell().AlignRight().Text(p.UnidadesCompradas.ToString(Cultura));
+                    table.Cell().AlignRight().Text(p.ProductosDistintos.ToString(Cultura));
+                    table.Cell().AlignRight().Text(Dinero(p.MontoTotalCompras));
+                }
             });
+
+            col.Item().PaddingTop(10).Text("Datos de contacto y ubicacion").Bold().FontSize(9)
+                .FontColor(Colors.Blue.Darken2);
+
+            col.Item().PaddingTop(4).Column(inner =>
+            {
+                foreach (InformeProveedorResumenFila p in filas.Take(MaxFilasTabla))
+                {
+                    inner.Item().PaddingTop(5).Border(1).BorderColor(Colors.Grey.Lighten2).Padding(6).Column(block =>
+                    {
+                        string titulo = string.IsNullOrWhiteSpace(p.Nit)
+                            ? p.NombreProveedor
+                            : $"{p.NombreProveedor} · NIT {p.Nit}";
+                        block.Item().Text(titulo).SemiBold().FontSize(9);
+
+                        if (!string.IsNullOrWhiteSpace(p.PersonaContacto))
+                        {
+                            block.Item().Text($"Contacto: {p.PersonaContacto}").FontSize(8);
+                        }
+
+                        block.Item().Text($"Celular: {ValorOGuion(p.Celular)} · Correo: {ValorOGuion(p.CorreoElectronico)} · Tel. fijo: {ValorOGuion(p.TelefonoFijo)}")
+                            .FontSize(8);
+                        block.Item().Text($"Ciudad: {ValorOGuion(p.Ciudad)} · Direccion: {ValorOGuion(p.Direccion)}")
+                            .FontSize(8);
+                        block.Item().PaddingTop(3).Text(
+                                $"Compras en periodo: {p.NumeroCompras} · Unidades: {p.UnidadesCompradas} · Productos distintos: {p.ProductosDistintos} · Monto: {Dinero(p.MontoTotalCompras)}")
+                            .FontSize(7).FontColor(Colors.Grey.Darken1);
+                    });
+                }
+            });
+
+            if (filas.Count > MaxFilasTabla)
+            {
+                col.Item().Element(c => NotaTruncado(c, filas.Count));
+            }
         });
     }
 
@@ -502,4 +536,7 @@ public class InformesPdfService
     private static string Truncar(string? texto, int max) =>
         string.IsNullOrEmpty(texto) ? "—" :
         texto.Length <= max ? texto : texto[..(max - 1)] + "…";
+
+    private static string ValorOGuion(string? texto) =>
+        string.IsNullOrWhiteSpace(texto) ? "—" : texto.Trim();
 }

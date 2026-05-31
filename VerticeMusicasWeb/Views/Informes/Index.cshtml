@@ -132,7 +132,7 @@
                         <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-entradas" data-seccion="entradas" type="button">Entradas</button></li>
                         <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-compras-prov" data-seccion="compras-proveedor" type="button">Por proveedor</button></li>
                         <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-comparacion" data-seccion="comparacion" type="button">Comparar precios</button></li>
-                        <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-proveedores" data-seccion="proveedores" type="button">Resumen prov.</button></li>
+                        <li><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-proveedores" data-seccion="proveedores" type="button">Directorio prov.</button></li>
                     </ul>
                 </div>
                 <div class="informes-tab-group">
@@ -316,15 +316,14 @@
                 }
                 else
                 {
-                    <div class="table-responsive">
+                    <div class="table-responsive mb-3">
                         <table class="table table-modern table-hover mb-0">
-                            <thead><tr><th>Proveedor</th><th>Contacto</th><th class="text-end">Compras</th><th class="text-end">Uds.</th><th class="text-end">Productos</th><th class="text-end">Monto</th></tr></thead>
+                            <thead><tr><th>Proveedor</th><th class="text-end">Compras</th><th class="text-end">Uds.</th><th class="text-end">Productos</th><th class="text-end">Monto</th></tr></thead>
                             <tbody>
                             @foreach (var p in Model.Proveedores)
                             {
                                 <tr>
                                     <td><a asp-controller="Proveedores" asp-action="Index">@p.NombreProveedor</a></td>
-                                    <td class="small text-muted">@p.Contacto</td>
                                     <td class="text-end">@p.NumeroCompras</td>
                                     <td class="text-end">@p.UnidadesCompradas</td>
                                     <td class="text-end">@p.ProductosDistintos</td>
@@ -333,6 +332,32 @@
                             }
                             </tbody>
                         </table>
+                    </div>
+                    <h6 class="mb-2">Datos de contacto y ubicacion</h6>
+                    <div class="row g-2">
+                    @foreach (var p in Model.Proveedores)
+                    {
+                        <div class="col-md-6 col-xl-4">
+                            <div class="border rounded-3 p-3 h-100 bg-white">
+                                <div class="fw-semibold mb-1">
+                                    <a asp-controller="Proveedores" asp-action="Index">@p.NombreProveedor</a>
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(p.Nit))
+                                {
+                                    <div class="small text-muted mb-1">NIT @p.Nit</div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(p.PersonaContacto))
+                                {
+                                    <div class="small"><span class="text-muted">Contacto:</span> @p.PersonaContacto</div>
+                                }
+                                <div class="small"><span class="text-muted">Celular:</span> @(p.Celular ?? "—")</div>
+                                <div class="small"><span class="text-muted">Correo:</span> @(p.CorreoElectronico ?? "—")</div>
+                                <div class="small"><span class="text-muted">Tel. fijo:</span> @(p.TelefonoFijo ?? "—")</div>
+                                <div class="small"><span class="text-muted">Ciudad:</span> @(p.Ciudad ?? "—")</div>
+                                <div class="small"><span class="text-muted">Direccion:</span> @(p.Direccion ?? "—")</div>
+                            </div>
+                        </div>
+                    }
                     </div>
                 }
             </div>
